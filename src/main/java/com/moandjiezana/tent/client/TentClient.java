@@ -2,10 +2,12 @@ package com.moandjiezana.tent.client;
 
 import com.moandjiezana.tent.client.apps.RegistrationRequest;
 import com.moandjiezana.tent.client.apps.RegistrationResponse;
+import com.moandjiezana.tent.client.posts.Post;
 import com.moandjiezana.tent.client.users.Following;
 import com.moandjiezana.tent.client.users.Profile;
 
 import java.util.List;
+import java.util.concurrent.Future;
 
 /**
  * A synchronous wrapper around {@link TentClientAsync}
@@ -42,9 +44,29 @@ public class TentClient {
     }
   }
   
+  public Following getFollowing(Following following) {
+    try {
+      return tentClientAsync.getFollowing(following).get();
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
+  }
+  
+  public List<Post> getPosts() {
+    return unwrap(tentClientAsync.getPosts());
+  }
+  
   public RegistrationResponse register(RegistrationRequest registrationRequest) {
     try {
       return tentClientAsync.register(registrationRequest).get();
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
+  }
+  
+  private <T> T unwrap(Future<T> future) {
+    try {
+      return future.get();
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
