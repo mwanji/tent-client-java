@@ -21,50 +21,30 @@ public class TentClient {
   public TentClient() {}
   
   public List<String> discover(String entityUrl) {
-    try {
-      return tentClientAsync.discover(entityUrl).get();
-    } catch (Exception e) {
-      throw new RuntimeException(e);
-    }
+    return waitFor(tentClientAsync.discover(entityUrl));
   }
   
   public Profile getProfile() {
-    try {
-      return tentClientAsync.getProfile().get();
-    } catch (Exception e) {
-      throw new RuntimeException(e);
-    }
+    return waitFor(tentClientAsync.getProfile());
   }
   
   public List<Following> getFollowings() {
-    try {
-      return tentClientAsync.getFollowings().get();
-    } catch (Exception e) {
-      throw new RuntimeException(e);
-    }
+    return waitFor(tentClientAsync.getFollowings());
   }
   
   public Following getFollowing(Following following) {
-    try {
-      return tentClientAsync.getFollowing(following).get();
-    } catch (Exception e) {
-      throw new RuntimeException(e);
-    }
+    return waitFor(tentClientAsync.getFollowing(following));
   }
   
   public List<Post> getPosts() {
-    return unwrap(tentClientAsync.getPosts());
+    return waitFor(tentClientAsync.getPosts());
   }
   
   public RegistrationResponse register(RegistrationRequest registrationRequest) {
-    try {
-      return tentClientAsync.register(registrationRequest).get();
-    } catch (Exception e) {
-      throw new RuntimeException(e);
-    }
+    return waitFor(tentClientAsync.register(registrationRequest));
   }
   
-  private <T> T unwrap(Future<T> future) {
+  private <T> T waitFor(Future<T> future) {
     try {
       return future.get();
     } catch (Exception e) {
