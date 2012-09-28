@@ -7,10 +7,10 @@ public class RegistrationRequest {
   private final String name;
   private final String description;
   private final String url;
-  private final String[] redirectUris; 
+  private final String[] redirectUris;
   private final Map<String, String> scopes;
   private String icon;
-  
+
   public RegistrationRequest(String name, String description, String url, String[] redirectUris, Map<String, String> scopes) {
     this.name = name;
     this.description = description;
