@@ -55,6 +55,18 @@
     	<artifactId>jackson-mapper-asl</artifactId>
     	<version>1.9.9</version>
     </dependency>
+    <dependency>
+    	<groupId>com.github.rest-driver</groupId>
+    	<artifactId>rest-client-driver</artifactId>
+    	<version>1.1.27</version>
+    	<scope>test</scope>
+    	<exclusions>
+    		<exclusion>
+    			<artifactId>slf4j-nop</artifactId>
+    			<groupId>org.slf4j</groupId>
+    		</exclusion>
+    	</exclusions>
+    </dependency>
   </dependencies>
   <organization>
   	<name>Moandji Ezana</name>
