@@ -68,7 +68,7 @@ public class TentClientTest {
   
   @Test
   public void should_discover_profile_url_from_header() throws Exception {
-    server.addExpectation(onRequestTo("/").withMethod(Method.HEAD), giveEmptyResponse().withContentType("text/html;charset=utf-8").withHeader("Link", "<" + server.getBaseUrl() + "/tent/profile>; rel=\"https://tent.io/rels/profile\""));
+    server.addExpectation(onRequestTo("/").withMethod(Method.HEAD), giveEmptyResponse().withContentType("text/html;charset=utf-8").withHeader("Link", "<" + profileUrl() + ">; rel=\"https://tent.io/rels/profile\""));
     
     List<String> profileUrls = tentClient.discover(server.getBaseUrl(), "HEAD").get();
     
@@ -76,12 +76,30 @@ public class TentClientTest {
   }
   
   @Test
+  public void should_discover_no_profile_url_when_none_in_header() throws Exception {
+    server.addExpectation(onRequestTo("/").withMethod(Method.HEAD), giveEmptyResponse().withContentType("text/html;charset=utf-8"));
+    
+    List<String> profileUrls = tentClient.discover(server.getBaseUrl(), "HEAD").get();
+    
+    assertThat(profileUrls).isEmpty();
+  }
+  
+  @Test
   public void should_discover_profile_url_from_tag() throws Exception {
-    server.addExpectation(onRequestTo("/"), giveResponse("<html><head><link href=\"" + server.getBaseUrl() + "/tent/profile\" rel=\"https://tent.io/rels/profile\" /><link href=\"other_href\" rel=\"other_rel\" /></head><body></body></html>"));
+    server.addExpectation(onRequestTo("/"), giveResponse("<html><head><link href=\"" + profileUrl() + "\" rel=\"https://tent.io/rels/profile\" /><link href=\"other_href\" rel=\"other_rel\" /></head><body></body></html>"));
     
     List<String> profileUrls = tentClient.discover(server.getBaseUrl(), "GET").get();
     
     assertThat(profileUrls).containsOnly(profileUrl());
+  }
+  
+  @Test
+  public void should_discover_no_profile_url_when_none_in_html() throws Exception {
+    server.addExpectation(onRequestTo("/"), giveResponse("<html><head><link href=\"other_href\" rel=\"other_rel\" /></head><body></body></html>"));
+    
+    List<String> profileUrls = tentClient.discover(server.getBaseUrl(), "GET").get();
+    
+    assertThat(profileUrls).isEmpty();
   }
 
   private String profileUrl() {
