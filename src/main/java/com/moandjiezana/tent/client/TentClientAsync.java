@@ -5,7 +5,6 @@ import com.moandjiezana.tent.client.apps.RegistrationResponse;
 import com.moandjiezana.tent.client.posts.Post;
 import com.moandjiezana.tent.client.users.Following;
 import com.moandjiezana.tent.client.users.Profile;
-import com.moandjiezana.tent.http.SimpleAsyncHandler;
 import com.ning.http.client.AsyncCompletionHandler;
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.AsyncHttpClient.BoundRequestBuilder;
@@ -83,9 +82,9 @@ public class TentClientAsync {
    */
   public Future<Profile> getProfile() {
     try {
-      return httpClient.prepareGet(profileUrls.get(0)).addHeader("Accept", TENT_MIME_TYPE).execute(new SimpleAsyncHandler<Profile>() {
+      return httpClient.prepareGet(profileUrls.get(0)).addHeader("Accept", TENT_MIME_TYPE).execute(new AsyncCompletionHandler<Profile>() {
         @Override
-        protected Profile doOnCompleted(Response response) throws Exception {
+        public Profile onCompleted(Response response) throws Exception {
           String responseBody = response.getResponseBody();
           LOGGER.debug(responseBody);
           JsonNode json = objectMapper.readValue(responseBody, JsonNode.class);
@@ -114,9 +113,9 @@ public class TentClientAsync {
   
   public Future<List<Following>> getFollowings() {
     try {
-      return httpClient.prepareGet(servers[0] + "/followings").addHeader("Accept", TENT_MIME_TYPE).execute(new SimpleAsyncHandler<List<Following>>() {
+      return httpClient.prepareGet(servers[0] + "/followings").addHeader("Accept", TENT_MIME_TYPE).execute(new AsyncCompletionHandler<List<Following>>() {
         @Override
-        protected List<Following> doOnCompleted(Response response) throws Exception {
+        public List<Following> onCompleted(Response response) throws Exception {
           String responseBody = response.getResponseBody();
           LOGGER.debug(responseBody);
           
@@ -130,9 +129,9 @@ public class TentClientAsync {
 
   public Future<Following> getFollowing(Following following) {
     try {
-      return httpClient.prepareGet(servers[0] + "/followings/" + following.getId()).addHeader("Accept", TENT_MIME_TYPE).execute(new SimpleAsyncHandler<Following>() {
+      return httpClient.prepareGet(servers[0] + "/followings/" + following.getId()).addHeader("Accept", TENT_MIME_TYPE).execute(new AsyncCompletionHandler<Following>() {
         @Override
-        protected Following doOnCompleted(Response response) throws Exception {
+        public Following onCompleted(Response response) throws Exception {
           String responseBody = response.getResponseBody();
           LOGGER.debug(responseBody);
           
@@ -146,9 +145,9 @@ public class TentClientAsync {
   
   public Future<List<Post>> getPosts() {
     try {
-      return httpClient.prepareGet(servers[0] + "/posts").addHeader("Accept", TENT_MIME_TYPE).execute(new SimpleAsyncHandler<List<Post>>() {
+      return httpClient.prepareGet(servers[0] + "/posts").addHeader("Accept", TENT_MIME_TYPE).execute(new AsyncCompletionHandler<List<Post>>() {
         @Override
-        protected List<Post> doOnCompleted(Response response) throws Exception {
+        public List<Post> onCompleted(Response response) throws Exception {
           String responseBody = response.getResponseBody();
           LOGGER.debug(responseBody);
           
@@ -169,9 +168,9 @@ public class TentClientAsync {
         .addHeader("Content-Type", TENT_MIME_TYPE)
         .addHeader("Accept", TENT_MIME_TYPE)
         .setBody(jsonWriter.toString())
-        .execute(new SimpleAsyncHandler<RegistrationResponse>() {
+        .execute(new AsyncCompletionHandler<RegistrationResponse>() {
           @Override
-          protected RegistrationResponse doOnCompleted(Response response) throws Exception {
+          public RegistrationResponse onCompleted(Response response) throws Exception {
             String responseBody = response.getResponseBody();
             LOGGER.debug(responseBody);
             return objectMapper.readValue(responseBody, RegistrationResponse.class);
