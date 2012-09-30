@@ -1,5 +1,8 @@
 package com.moandjiezana.tent.client;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.moandjiezana.tent.client.apps.RegistrationRequest;
 import com.moandjiezana.tent.client.apps.RegistrationResponse;
 import com.moandjiezana.tent.client.posts.Post;
@@ -17,9 +20,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Future;
 
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.type.TypeReference;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -101,7 +101,7 @@ public class TentClientAsync {
           Profile profile = new Profile();
           
           if (json.has(Profile.Core.URI)) {
-            profile.setCore(objectMapper.readValue(json.get(Profile.Core.URI), Profile.Core.class));
+            profile.setCore(objectMapper.convertValue(json.get(Profile.Core.URI), Profile.Core.class));
             
             if (servers == null) {
               addServers(profile.getCore());
@@ -109,7 +109,7 @@ public class TentClientAsync {
           }
           
           if (json.has(Profile.Basic.URI)) {
-            profile.setBasic(objectMapper.readValue(json.get(Profile.Basic.URI), Profile.Basic.class));
+            profile.setBasic(objectMapper.convertValue(json.get(Profile.Basic.URI), Profile.Basic.class));
           }
           
           return profile;

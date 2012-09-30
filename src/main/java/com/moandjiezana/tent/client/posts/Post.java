@@ -1,13 +1,12 @@
 package com.moandjiezana.tent.client.posts;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.moandjiezana.tent.client.users.Permissions;
 
 import java.io.StringWriter;
 import java.util.Map;
-
-import org.codehaus.jackson.annotate.JsonIgnore;
-import org.codehaus.jackson.annotate.JsonProperty;
-import org.codehaus.jackson.map.ObjectMapper;
 
 public class Post {
 

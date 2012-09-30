@@ -1,8 +1,8 @@
 package com.moandjiezana.tent.client.users;
 
-import java.util.Map;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-import org.codehaus.jackson.annotate.JsonProperty;
+import java.util.Map;
 
 public class Profile {
 

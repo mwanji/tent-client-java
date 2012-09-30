@@ -51,9 +51,9 @@
     	<version>1.2.1.2</version>
     </dependency>
     <dependency>
-    	<groupId>org.codehaus.jackson</groupId>
-    	<artifactId>jackson-mapper-asl</artifactId>
-    	<version>1.9.9</version>
+    	<groupId>com.fasterxml.jackson.core</groupId>
+    	<artifactId>jackson-databind</artifactId>
+    	<version>2.0.6</version>
     </dependency>
     <dependency>
     	<groupId>com.github.rest-driver</groupId>
@@ -77,6 +77,12 @@
     	<artifactId>fest-assert</artifactId>
     	<version>1.4</version>
     	<scope>test</scope>
+    </dependency>
+    <dependency>
+    	<groupId>com.fasterxml.jackson.core</groupId>
+    	<artifactId>jackson-databind</artifactId>
+    	<version>2.0.6</version>
+    	<type>bundle</type>
     </dependency>
   </dependencies>
   <organization>
