@@ -3,15 +3,18 @@ package com.moandjiezana.tent.client;
 import static com.github.restdriver.clientdriver.RestClientDriver.giveEmptyResponse;
 import static com.github.restdriver.clientdriver.RestClientDriver.giveResponse;
 import static com.github.restdriver.clientdriver.RestClientDriver.onRequestTo;
+import static java.util.Arrays.asList;
 import static org.fest.assertions.Assertions.assertThat;
 
 import com.github.restdriver.clientdriver.ClientDriverRequest.Method;
 import com.github.restdriver.clientdriver.ClientDriverRule;
+import com.moandjiezana.tent.client.apps.RegistrationRequest;
 import com.moandjiezana.tent.client.posts.Mention;
 import com.moandjiezana.tent.client.posts.Post;
 import com.moandjiezana.tent.client.posts.Status;
 import com.moandjiezana.tent.client.users.Profile;
 
+import java.util.HashMap;
 import java.util.List;
 
 import org.junit.Ignore;
@@ -26,7 +29,7 @@ public class TentClientTest {
   
   @Rule
   public final ClientDriverRule server = new ClientDriverRule();
-  private final TentClientAsync tentClient = new TentClientAsync();
+  private TentClientAsync tentClient = new TentClientAsync();
 
   @Test @Ignore
   public void explore() {
@@ -100,6 +103,20 @@ public class TentClientTest {
     List<String> profileUrls = tentClient.discover(server.getBaseUrl(), "GET").get();
     
     assertThat(profileUrls).isEmpty();
+  }
+  
+  @Test
+  public void should_register_with_server() throws Exception {
+    Profile profile = new Profile();
+    Profile.Core core = new Profile.Core();
+    core.setServers(new String[] { server.getBaseUrl() });
+    profile.setCore(core);
+    
+    tentClient = new TentClientAsync(profile, asList(profileUrl()));
+    
+    server.addExpectation(onRequestTo("/apps").withMethod(Method.POST), giveResponse("{\"name\": \"FooApp\",\"description\": \"Does amazing foos with your data\",\"url\": \"http://example.com\",\n\"icon\": \"http://example.com/icon.png\",\"redirect_uris\": [\"https://app.example.com/tent/callback\"],\"scopes\": {\"write_profile\": \"Uses an app profile section to describe foos\",\"read_followings\": \"Calculates foos based on your followings\"},\"id\": \"fbh9mv\",\"mac_key_id\": \"a:960fedee\",\"mac_key\": \"f7ef29fd0b7ec539f3f7f404aee0a866\",\"mac_algorithm\": \"hmac-sha-256\",\"authorizations\": []}"));
+    
+    tentClient.register(new RegistrationRequest("unit_test", "description", "test_url", new String[] {}, new HashMap<String, String>())).get();
   }
 
   private String profileUrl() {
