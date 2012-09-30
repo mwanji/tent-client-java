@@ -20,6 +20,11 @@ public class TentClient {
    */
   public TentClient() {}
   
+  /**
+   * Obtains the profile URLs for the given entity, first by HEAD, then by GET, if necessary.
+   * @param entityUrl
+   * @return
+   */
   public List<String> discover(String entityUrl) {
     List<String> profileUrls = waitFor(tentClientAsync.discover(entityUrl, "HEAD"));
     

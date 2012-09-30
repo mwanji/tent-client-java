@@ -51,8 +51,8 @@ public class TentClientAsync {
    * Obtains the profile URLs for the given entity.
    * All future method calls use these URLs.
    * @param entityUrl
-   * @param method can be HEAD or GET
-   * @return profile URLs
+   * @param method can be HEAD or GET. 
+   * @return profile URLs, for convenience, as they are also stored internally. Empty if no profile URLs found.
    */
   public Future<List<String>> discover(final String entityUrl, String method) {
     servers = null;
@@ -192,7 +192,7 @@ public class TentClientAsync {
     
     if (headers != null) {
       for (String header : headers) {
-        if (!header.contains(" rel=\"" + TENT_REL_PROFILE + "\"")) {
+        if (!header.contains("rel=\"" + TENT_REL_PROFILE + "\"")) {
           continue;
         }
         
