@@ -46,6 +46,11 @@ public class TentClientAsync {
    */
   public TentClientAsync() {}
   
+  public TentClientAsync(Profile profile, List<String> profileUrls) {
+    servers = profile.getCore().getServers();
+    this.profileUrls = profileUrls;
+  }
+  
   /**
    * Obtains the profile URLs for the given entity.
    * All future method calls use these URLs.

@@ -13,12 +13,18 @@ import java.util.concurrent.Future;
  * A synchronous wrapper around {@link TentClientAsync}
  */
 public class TentClient {
-  private final TentClientAsync tentClientAsync = new TentClientAsync();
+  private final TentClientAsync tentClientAsync;
   
   /**
    * Use the default constructor only to discover an entity.
    */
-  public TentClient() {}
+  public TentClient() {
+    tentClientAsync = new TentClientAsync();
+  }
+  
+  public TentClient(Profile profile, List<String> profileUrls) {
+    tentClientAsync = new TentClientAsync(profile, profileUrls);
+  }
   
   /**
    * Obtains the profile URLs for the given entity, first by HEAD, then by GET, if necessary.
