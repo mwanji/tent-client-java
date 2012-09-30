@@ -6,18 +6,25 @@ import com.moandjiezana.tent.client.posts.Post;
 import com.moandjiezana.tent.client.users.Following;
 import com.moandjiezana.tent.client.users.Profile;
 import com.moandjiezana.tent.http.SimpleAsyncHandler;
+import com.ning.http.client.AsyncCompletionHandler;
 import com.ning.http.client.AsyncHttpClient;
+import com.ning.http.client.AsyncHttpClient.BoundRequestBuilder;
 import com.ning.http.client.Response;
 
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Future;
 
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.TypeReference;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,6 +32,7 @@ import org.slf4j.LoggerFactory;
  * As this class is stateful, each instance should only be used for one entity at a time.
  */
 public class TentClientAsync {
+  private static final String TENT_REL_PROFILE = "https://tent.io/rels/profile";
   private static final Logger LOGGER = LoggerFactory.getLogger(TentClientAsync.class);
   private static final String TENT_MIME_TYPE = "application/vnd.tent.v0+json";
   
@@ -43,17 +51,25 @@ public class TentClientAsync {
    * Obtains the profile URLs for the given entity.
    * All future method calls use these URLs.
    * @param entityUrl
-   * @return 
+   * @param method can be HEAD or GET
+   * @return profile URLs
    */
-  public Future<List<String>> discover(String entityUrl) {
+  public Future<List<String>> discover(final String entityUrl, String method) {
+    servers = null;
+    profileUrls = null;
     try {
-      return httpClient.prepareHead(entityUrl).addHeader("Accept", TENT_MIME_TYPE).execute(new SimpleAsyncHandler<List<String>>() {
+      BoundRequestBuilder request = method.equals("HEAD") ? httpClient.prepareHead(entityUrl) : httpClient.prepareGet(entityUrl);
+      
+      return request.addHeader("Accept", TENT_MIME_TYPE).execute(new AsyncCompletionHandler<List<String>>() {
         @Override
-        protected List<String> doOnCompleted(Response response) throws Exception {
-          addProfileUrls(response);
-          servers = null;
-          
-          return profileUrls;
+        public List<String> onCompleted(Response response) throws Exception {
+          if (response.getStatusCode() == 405) {
+            return Collections.emptyList();
+          } else {
+            addProfileUrls(response);
+            
+            return profileUrls;
+          }
         }
       });
     } catch (Exception e) {
@@ -170,15 +186,34 @@ public class TentClientAsync {
     servers = core.getServers();
   }
   
-  private void addProfileUrls(Response response) {
+  private void addProfileUrls(Response response) throws IOException {
     profileUrls = new ArrayList<String>();
-    String header = response.getHeader("Link");
-    String[] rawLinks = header.split(",");
+    List<String> headers = response.getHeaders("Link");
     
-    for (String rawLink : rawLinks) {
-      String[] urlAndRel = rawLink.split(";");
-      if (urlAndRel.length == 2 && urlAndRel[1].equals(" rel=\"https://tent.io/rels/profile\"")) {
-        profileUrls.add(urlAndRel[0].substring(1, urlAndRel[0].length() - 1));
+    if (headers != null) {
+      for (String header : headers) {
+        if (!header.contains(" rel=\"" + TENT_REL_PROFILE + "\"")) {
+          continue;
+        }
+        
+        String[] rawLinks = header.split(",");
+        
+        for (String rawLink : rawLinks) {
+          String[] urlAndRel = rawLink.split(";");
+          if (urlAndRel.length == 2) {
+            profileUrls.add(urlAndRel[0].substring(1, urlAndRel[0].length() - 1));
+          }
+        }
+      }
+    }
+    
+    if (profileUrls.isEmpty()) {
+      Document document = Jsoup.parse(response.getResponseBody());
+      
+      Elements elements = document.select("head link[rel=" + TENT_REL_PROFILE + "]");
+      
+      for (Element element : elements) {
+        profileUrls.add(element.attr("href"));
       }
     }
   }

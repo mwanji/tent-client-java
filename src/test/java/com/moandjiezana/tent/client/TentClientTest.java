@@ -3,7 +3,7 @@ package com.moandjiezana.tent.client;
 import static com.github.restdriver.clientdriver.RestClientDriver.giveEmptyResponse;
 import static com.github.restdriver.clientdriver.RestClientDriver.giveResponse;
 import static com.github.restdriver.clientdriver.RestClientDriver.onRequestTo;
-import static org.junit.Assert.assertEquals;
+import static org.fest.assertions.Assertions.assertThat;
 
 import com.github.restdriver.clientdriver.ClientDriverRequest.Method;
 import com.github.restdriver.clientdriver.ClientDriverRule;
@@ -14,6 +14,7 @@ import com.moandjiezana.tent.client.users.Profile;
 
 import java.util.List;
 
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -27,7 +28,7 @@ public class TentClientTest {
   public final ClientDriverRule server = new ClientDriverRule();
   private final TentClientAsync tentClient = new TentClientAsync();
 
-  @Test
+  @Test @Ignore
   public void explore() {
     TentClient tentClientSync = new TentClient();
     tentClientSync.discover("https://mwanji.tent.is");
@@ -66,18 +67,28 @@ public class TentClientTest {
   }
   
   @Test
-  public void should_discover_profile_from_header() throws Exception {
+  public void should_discover_profile_url_from_header() throws Exception {
     server.addExpectation(onRequestTo("/").withMethod(Method.HEAD), giveEmptyResponse().withContentType("text/html;charset=utf-8").withHeader("Link", "<" + server.getBaseUrl() + "/tent/profile>; rel=\"https://tent.io/rels/profile\""));
-    server.addExpectation(onRequestTo("/tent/profile").withHeader("Accept", "application/vnd.tent.v0+json"), giveResponse(getProfileJson()).withContentType("application/vnd.tent.v0+json; charset=utf-8"));
     
-    tentClient.discover(server.getBaseUrl()).get();
-    Profile profile = tentClient.getProfile().get();
+    List<String> profileUrls = tentClient.discover(server.getBaseUrl(), "HEAD").get();
     
-    assertEquals(server.getBaseUrl(), profile.getCore().getEntity());
-    assertEquals("Mwanji Ezana", profile.getBasic().getName());
+    assertThat(profileUrls).containsOnly(profileUrl());
   }
   
-  private String getProfileJson() {
+  @Test
+  public void should_discover_profile_url_from_tag() throws Exception {
+    server.addExpectation(onRequestTo("/"), giveResponse("<html><head><link href=\"" + server.getBaseUrl() + "/tent/profile\" rel=\"https://tent.io/rels/profile\" /><link href=\"other_href\" rel=\"other_rel\" /></head><body></body></html>"));
+    
+    List<String> profileUrls = tentClient.discover(server.getBaseUrl(), "GET").get();
+    
+    assertThat(profileUrls).containsOnly(profileUrl());
+  }
+
+  private String profileUrl() {
+    return server.getBaseUrl() + "/tent/profile";
+  }
+  
+  private String profileJson() {
     return "{\"https://tent.io/types/info/basic/v0.1.0\":{\"name\":\"Mwanji Ezana\",\"avatar_url\":\"http://www.gravatar.com/avatar/ae8715093d8d4219507146ed34f0ed16.png\",\"birthdate\":\"\",\"location\":\"\",\"gender\":\"M\",\"bio\":\"\",\"permissions\":{\"public\":true}},\"https://tent.io/types/info/core/v0.1.0\":{\"entity\":\"" + server.getBaseUrl() + "\",\"licenses\":[],\"servers\":[\"https://mwanji.tent.is/tent\"],\"permissions\":{\"public\":true}}}";
   }
 

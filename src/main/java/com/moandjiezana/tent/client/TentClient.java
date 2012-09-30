@@ -21,7 +21,13 @@ public class TentClient {
   public TentClient() {}
   
   public List<String> discover(String entityUrl) {
-    return waitFor(tentClientAsync.discover(entityUrl));
+    List<String> profileUrls = waitFor(tentClientAsync.discover(entityUrl, "HEAD"));
+    
+    if (!profileUrls.isEmpty()) {
+      return profileUrls;
+    }
+    
+    return waitFor(tentClientAsync.discover(entityUrl, "GET"));
   }
   
   public Profile getProfile() {
