@@ -29,12 +29,11 @@ public class TentClientTest {
   
   @Rule
   public final ClientDriverRule server = new ClientDriverRule();
-  private TentClientAsync tentClient = new TentClientAsync();
 
   @Test @Ignore
   public void explore() {
-    TentClient tentClientSync = new TentClient();
-    tentClientSync.discover("https://mwanji.tent.is");
+    TentClient tentClientSync = new TentClient("https://mwanji.tent.is");
+    tentClientSync.discover();
     Profile profile = tentClientSync.getProfile();
 //    
 //    System.out.println(profile.getCore().getEntity());
@@ -73,7 +72,7 @@ public class TentClientTest {
   public void should_discover_profile_url_from_header() throws Exception {
     server.addExpectation(onRequestTo("/").withMethod(Method.HEAD), giveEmptyResponse().withContentType("text/html;charset=utf-8").withHeader("Link", "<" + profileUrl() + ">; rel=\"https://tent.io/rels/profile\""));
     
-    List<String> profileUrls = tentClient.discover(server.getBaseUrl(), "HEAD").get();
+    List<String> profileUrls = tentClient().discover("HEAD").get();
     
     assertThat(profileUrls).containsOnly(profileUrl());
   }
@@ -82,7 +81,7 @@ public class TentClientTest {
   public void should_discover_no_profile_url_when_none_in_header() throws Exception {
     server.addExpectation(onRequestTo("/").withMethod(Method.HEAD), giveEmptyResponse().withContentType("text/html;charset=utf-8"));
     
-    List<String> profileUrls = tentClient.discover(server.getBaseUrl(), "HEAD").get();
+    List<String> profileUrls = tentClient().discover("HEAD").get();
     
     assertThat(profileUrls).isEmpty();
   }
@@ -91,7 +90,7 @@ public class TentClientTest {
   public void should_discover_profile_url_from_tag() throws Exception {
     server.addExpectation(onRequestTo("/"), giveResponse("<html><head><link href=\"" + profileUrl() + "\" rel=\"https://tent.io/rels/profile\" /><link href=\"other_href\" rel=\"other_rel\" /></head><body></body></html>"));
     
-    List<String> profileUrls = tentClient.discover(server.getBaseUrl(), "GET").get();
+    List<String> profileUrls = tentClient().discover("GET").get();
     
     assertThat(profileUrls).containsOnly(profileUrl());
   }
@@ -100,7 +99,7 @@ public class TentClientTest {
   public void should_discover_no_profile_url_when_none_in_html() throws Exception {
     server.addExpectation(onRequestTo("/"), giveResponse("<html><head><link href=\"other_href\" rel=\"other_rel\" /></head><body></body></html>"));
     
-    List<String> profileUrls = tentClient.discover(server.getBaseUrl(), "GET").get();
+    List<String> profileUrls = tentClient().discover("GET").get();
     
     assertThat(profileUrls).isEmpty();
   }
@@ -112,7 +111,7 @@ public class TentClientTest {
     core.setServers(new String[] { server.getBaseUrl() });
     profile.setCore(core);
     
-    tentClient = new TentClientAsync(profile, asList(profileUrl()));
+    TentClientAsync tentClient = new TentClientAsync(profile, asList(profileUrl()));
     
     server.addExpectation(onRequestTo("/apps").withMethod(Method.POST), giveResponse("{\"name\": \"FooApp\",\"description\": \"Does amazing foos with your data\",\"url\": \"http://example.com\",\n\"icon\": \"http://example.com/icon.png\",\"redirect_uris\": [\"https://app.example.com/tent/callback\"],\"scopes\": {\"write_profile\": \"Uses an app profile section to describe foos\",\"read_followings\": \"Calculates foos based on your followings\"},\"id\": \"fbh9mv\",\"mac_key_id\": \"a:960fedee\",\"mac_key\": \"f7ef29fd0b7ec539f3f7f404aee0a866\",\"mac_algorithm\": \"hmac-sha-256\",\"authorizations\": []}"));
     
@@ -125,6 +124,10 @@ public class TentClientTest {
   
   private String profileJson() {
     return "{\"https://tent.io/types/info/basic/v0.1.0\":{\"name\":\"Mwanji Ezana\",\"avatar_url\":\"http://www.gravatar.com/avatar/ae8715093d8d4219507146ed34f0ed16.png\",\"birthdate\":\"\",\"location\":\"\",\"gender\":\"M\",\"bio\":\"\",\"permissions\":{\"public\":true}},\"https://tent.io/types/info/core/v0.1.0\":{\"entity\":\"" + server.getBaseUrl() + "\",\"licenses\":[],\"servers\":[\"https://mwanji.tent.is/tent\"],\"permissions\":{\"public\":true}}}";
+  }
+  
+  private TentClientAsync tentClient() {
+    return new TentClientAsync(server.getBaseUrl());
   }
 
   private void printPosts(List<Post> posts) {

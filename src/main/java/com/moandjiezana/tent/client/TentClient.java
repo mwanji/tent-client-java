@@ -18,8 +18,8 @@ public class TentClient {
   /**
    * Use the default constructor only to discover an entity.
    */
-  public TentClient() {
-    tentClientAsync = new TentClientAsync();
+  public TentClient(String entityUrl) {
+    tentClientAsync = new TentClientAsync(entityUrl);
   }
   
   public TentClient(Profile profile, List<String> profileUrls) {
@@ -28,17 +28,15 @@ public class TentClient {
   
   /**
    * Obtains the profile URLs for the given entity, first by HEAD, then by GET, if necessary.
-   * @param entityUrl
-   * @return
    */
-  public List<String> discover(String entityUrl) {
-    List<String> profileUrls = waitFor(tentClientAsync.discover(entityUrl, "HEAD"));
+  public List<String> discover() {
+    List<String> profileUrls = waitFor(tentClientAsync.discover("HEAD"));
     
     if (!profileUrls.isEmpty()) {
       return profileUrls;
     }
     
-    return waitFor(tentClientAsync.discover(entityUrl, "GET"));
+    return waitFor(tentClientAsync.discover("GET"));
   }
   
   public Profile getProfile() {

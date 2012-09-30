@@ -40,13 +40,17 @@ public class TentClientAsync {
 
   private String[] servers;
   private List<String> profileUrls;
+  private final String entityUrl;
   
   /**
    * Use the default constructor only to discover an entity.
    */
-  public TentClientAsync() {}
+  public TentClientAsync(String entityUrl) {
+    this.entityUrl = entityUrl;
+  }
   
   public TentClientAsync(Profile profile, List<String> profileUrls) {
+    this(profile.getCore().getEntity());
     servers = profile.getCore().getServers();
     this.profileUrls = profileUrls;
   }
@@ -58,7 +62,7 @@ public class TentClientAsync {
    * @param method can be HEAD or GET. 
    * @return profile URLs, for convenience, as they are also stored internally. Empty if no profile URLs found.
    */
-  public Future<List<String>> discover(final String entityUrl, String method) {
+  public Future<List<String>> discover(String method) {
     servers = null;
     profileUrls = null;
     try {
