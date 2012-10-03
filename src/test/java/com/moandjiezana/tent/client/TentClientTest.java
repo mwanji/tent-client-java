@@ -8,16 +8,18 @@ import static org.fest.assertions.Assertions.assertThat;
 
 import com.github.restdriver.clientdriver.ClientDriverRequest.Method;
 import com.github.restdriver.clientdriver.ClientDriverRule;
+import com.moandjiezana.tent.client.apps.AuthorizationRequest;
 import com.moandjiezana.tent.client.apps.RegistrationRequest;
+import com.moandjiezana.tent.client.apps.RegistrationResponse;
 import com.moandjiezana.tent.client.posts.Mention;
 import com.moandjiezana.tent.client.posts.Post;
 import com.moandjiezana.tent.client.posts.Status;
 import com.moandjiezana.tent.client.users.Profile;
+import com.moandjiezana.tent.oauth.AccessToken;
 
 import java.util.HashMap;
 import java.util.List;
 
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -30,11 +32,11 @@ public class TentClientTest {
   @Rule
   public final ClientDriverRule server = new ClientDriverRule();
 
-  @Test @Ignore
-  public void explore() {
-    TentClient tentClientSync = new TentClient("https://mwanji.tent.is");
-    tentClientSync.discover();
-    Profile profile = tentClientSync.getProfile();
+  @Test
+  public void register() throws Exception {
+    TentClient tentClient = new TentClient("https://mwanji.tent.is");
+    tentClient.discover();
+    Profile profile = tentClient.getProfile();
 //    
 //    System.out.println(profile.getCore().getEntity());
 //    System.out.println(profile.getBasic().getName());
@@ -56,16 +58,45 @@ public class TentClientTest {
 //      System.out.println(followingProfile.getBasic().getName());
 //      printPosts(followingTentClient.getPosts());
 //    }
-//    
-//    HashMap<String, String> scopes = new HashMap<String, String>();
-//    scopes.put("write_profile", "Not really used, just testing");
     
-//    RegistrationResponse registrationResponse = tentClient.register(new RegistrationRequest("Java Client Test", "Running dev tests", "http://www.moandjiezana.com/tent-client-java", new String [] { "http://www.moandjiezana.com/tent-client-java" }, scopes));
-//    
-//    System.out.println(registrationResponse.getId());
-//    System.out.println(registrationResponse.getMacKey());
-//    System.out.println(registrationResponse.getMacKeyId());
-//    System.out.println(registrationResponse.getMacAlgorithm());
+    HashMap<String, String> scopes = new HashMap<String, String>();
+    scopes.put("write_profile", "Not really used, just testing");
+    
+    RegistrationRequest registrationRequest = new RegistrationRequest("Java Client Test", "Running dev tests", "http://www.moandjiezana.com/tent-client-java", new String [] { "http://www.moandjiezana.com/tent-test/index.php" }, scopes);
+    RegistrationResponse registrationResponse = tentClient.register(registrationRequest);
+    
+    System.out.println("id=" + registrationResponse.getId());
+    System.out.println("mac_key_id=" + registrationResponse.getMacKeyId());
+    System.out.println("mac_key=" + registrationResponse.getMacKey());
+    System.out.println("mac_algorithm=" + registrationResponse.getMacAlgorithm());
+
+    AuthorizationRequest authorizationRequest = new AuthorizationRequest(registrationResponse.getId(), registrationRequest.getRedirectUris()[0]);
+    authorizationRequest.setScope("write_profile");
+    authorizationRequest.setState("myState");
+    authorizationRequest.setTentPostTypes(Status.URI);
+    authorizationRequest.setTentProfileInfoTypes(Profile.Core.URI, Profile.Basic.URI);
+    
+    System.out.println("Auth URL: " + tentClient.getAsync().buildAuthorizationUrl(registrationResponse, authorizationRequest));
+  }
+  
+  @Test
+  public void auth() throws Exception {
+    TentClient tentClient = new TentClient("https://mwanji.tent.is");
+    tentClient.discover();
+    
+    tentClient.getProfile();
+
+    RegistrationResponse registrationResponse = new RegistrationResponse();
+    registrationResponse.setId("2wun6g");
+    registrationResponse.setMacKeyId("a:a420ff32");
+    registrationResponse.setMacKey("436d31bb4a85e38fdfa2e3f7275eacec");
+    registrationResponse.setMacAlgorithm("hmac-sha-256");
+    
+    AccessToken accessToken = tentClient.getAsync().getAccessToken(registrationResponse, "f61631b9475571acef57f4beff2831e6").get();
+    
+    System.out.println("Access Token");
+    System.out.println("access_token=" + accessToken.getAccessToken());
+    System.out.println("mac_key=" + accessToken.getMacKey());
   }
   
   @Test
