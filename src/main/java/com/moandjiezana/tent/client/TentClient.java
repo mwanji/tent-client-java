@@ -59,6 +59,10 @@ public class TentClient {
     return waitFor(tentClientAsync.register(registrationRequest));
   }
   
+  public TentClientAsync getAsync() {
+    return tentClientAsync;
+  }
+  
   private <T> T waitFor(Future<T> future) {
     try {
       return future.get();
