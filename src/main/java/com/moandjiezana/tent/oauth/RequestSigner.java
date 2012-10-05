@@ -1,14 +1,17 @@
 package com.moandjiezana.tent.oauth;
 
+import com.google.common.base.Joiner;
 import com.google.common.base.Throwables;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
+import org.apache.commons.codec.Charsets;
+import org.apache.commons.codec.binary.Base64;
+
 public class RequestSigner {
 
-  private static final CharSequence EMPTY_STRING = "";
-  private static final CharSequence CARRIAGE_RETURN = "\r\n";
+  private static final Joiner NEW_LINES = Joiner.on("\n");
 
   public static String generateAuthorizationHeader(long timestamp, String nonce, String httpMethod, String uri, String host, int port, String macKey, String macKeyId, String algorithm) {
     if (host.startsWith("http://")) {
@@ -17,18 +20,23 @@ public class RequestSigner {
       host = host.replace("https://", "");
     }
     
-    String normalizedRequest = timestamp + "\n" + nonce + "\n" + httpMethod + "\n" + uri + "\n" + host + "\n" + port + "\n\n";
-    System.out.println("Normalized request=\n" + normalizedRequest + "ended");
+    String normalizedRequest = normalizeRequest(timestamp, nonce, httpMethod, uri, host, port);
     
-    SecretKeySpec spec = new SecretKeySpec(macKey.getBytes(), algorithm);
+    SecretKeySpec spec = new SecretKeySpec(macKey.getBytes(Charsets.UTF_8), algorithm);
     try {
-      Mac mac = Mac.getInstance(algorithm);
-      mac.init(spec);
-      byte[] macBytes = mac.doFinal(normalizedRequest.getBytes());
+      Mac hmacSha256 = Mac.getInstance(algorithm);
+      hmacSha256.init(spec);
+      byte[] macBytes = hmacSha256.doFinal(normalizedRequest.getBytes(Charsets.UTF_8));
 
-      return "MAC id=\"" + macKeyId + "\", ts=\"" + timestamp + "\", nonce=\"" + nonce + "\", mac=\"" + com.ning.http.util.Base64.encode(macBytes).replace(CARRIAGE_RETURN, EMPTY_STRING) + "\""; 
+      String mac = Base64.encodeBase64String(macBytes);
+      
+      return "MAC id=\"" + macKeyId + "\", ts=\"" + timestamp + "\", nonce=\"" + nonce + "\", mac=\"" + mac + "\""; 
     } catch (Exception e) {
       throw Throwables.propagate(e);
     }
+  }
+
+  private static String normalizeRequest(long timestamp, String nonce, String httpMethod, String uri, String host, int port) {
+    return NEW_LINES.join(timestamp, nonce, httpMethod.toUpperCase(), uri, host, port, "", "");
   }
 }

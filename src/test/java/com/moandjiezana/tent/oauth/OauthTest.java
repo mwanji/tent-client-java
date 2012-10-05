@@ -8,7 +8,7 @@ public class OauthTest {
 
   private static final String MAC_KEY = "489dks293j39";
   private static final String MAC_KEY_ID = "h480djs93hd8";
-  private static final int TIMESTAMP = 1336363200;
+  private static final long TIMESTAMP = 1336363200;
   private static final String NONCE = "dj83hs9s";
 
   @Test
@@ -40,14 +40,5 @@ public class OauthTest {
     String header = RequestSigner.generateAuthorizationHeader(TIMESTAMP, NONCE, "POST", "/resource/1?b=1&a=2", "example.com", 80, MAC_KEY, MAC_KEY_ID, "HmacSHA1");
     
     assertEquals("MAC id=\"h480djs93hd8\", ts=\"1336363200\", nonce=\"dj83hs9s\", mac=\"SIBz/j9mI1Ba2Y+10wdwbQGv2Yk=\"", header);
-  }
-  
-  @Test
-  public void should_pass_referentce_example() throws Exception {
-    // as found here: http://tools.ietf.org/html/draft-ietf-oauth-v2-http-mac-01#section-1.1
-    
-    String header = RequestSigner.generateAuthorizationHeader(TIMESTAMP, NONCE, "GET", "/resource/1?b=1&a=2", "example.com", 80, MAC_KEY, MAC_KEY_ID, "HmacSHA1");
-    
-    assertEquals("MAC id=\"h480djs93hd8\", ts=\"1336363200\", nonce=\"dj83hs9s\", mac=\"bhCQXTVyfj5cmA9uKkPFx1zeOXM=\"", header);
   }
 }

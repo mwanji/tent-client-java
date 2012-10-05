@@ -3,7 +3,6 @@ package com.moandjiezana.tent.client;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Throwables;
 import com.google.common.net.HttpHeaders;
 import com.moandjiezana.tent.client.apps.AuthorizationRequest;
@@ -28,7 +27,6 @@ import java.net.URL;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.Future;
@@ -46,7 +44,7 @@ import org.slf4j.LoggerFactory;
  */
 public class TentClientAsync {
   
-  private static final SecureRandom random = new SecureRandom();
+  private static final SecureRandom RANDOM = new SecureRandom();
   private static final String TENT_REL_PROFILE = "https://tent.io/rels/profile";
   private static final Logger LOGGER = LoggerFactory.getLogger(TentClientAsync.class);
   private static final String TENT_MIME_TYPE = "application/vnd.tent.v0+json";
@@ -57,13 +55,14 @@ public class TentClientAsync {
   private String[] servers;
   private List<String> profileUrls;
   private final String entityUrl;
+  private AccessToken accessToken;
 
   /**
    * Use the default constructor only to discover an entity.
    */
   public TentClientAsync(String entityUrl) {
     this.entityUrl = entityUrl;
-    this.httpClient = new AsyncHttpClient(new JDKAsyncHttpProvider(new AsyncHttpClientConfig.Builder().build()));
+    this.httpClient = new AsyncHttpClient(new JDKAsyncHttpProvider(new AsyncHttpClientConfig.Builder().setRequestTimeoutInMs(10000).build()));
   }
 
   public TentClientAsync(Profile profile, List<String> profileUrls) {
@@ -190,6 +189,28 @@ public class TentClientAsync {
       throw new RuntimeException(e);
     }
   }
+  
+  public Future<Post> write(Post post) {
+    try {
+      return httpClient.preparePost(servers[0] + "/posts")
+          .addHeader("Content-Type", TENT_MIME_TYPE)
+          .addHeader("Accept", TENT_MIME_TYPE)
+          .addHeader("Authorization", RequestSigner.generateAuthorizationHeader(System.currentTimeMillis() / 1000, new BigInteger(40, RANDOM).toString(32), "POST", "/tent/posts", "javaapiclient.tent.is", 443, accessToken.getMacKey(), accessToken.getAccessToken(), "hmacsha256"))
+          .setBody(objectMapper.writeValueAsString(post))
+          .execute(new AsyncCompletionHandler<Post>() {
+            @Override
+            public Post onCompleted(Response response) throws Exception {
+              String responseBody = response.getResponseBody();
+              LOGGER.debug(response.getStatusCode() + " " + response.getStatusText());
+              LOGGER.debug(responseBody);
+              
+              return objectMapper.readValue(responseBody, Post.class);
+            }
+          });
+    } catch (IOException e) {
+      throw Throwables.propagate(e);
+    }
+  }
 
   public Future<RegistrationResponse> register(RegistrationRequest registrationRequest) {
     StringWriter jsonWriter = new StringWriter();
@@ -220,9 +241,9 @@ public class TentClientAsync {
   }
   
   public Future<AccessToken> getAccessToken(RegistrationResponse registrationResponse, String code) {
-    long timestamp = new Date().getTime();
+    long timestamp = System.currentTimeMillis() / 1000;
     String uri = "/apps/" + registrationResponse.getId() + "/authorizations";
-    String nonce = new BigInteger(40, random).toString(32);
+    String nonce = new BigInteger(40, RANDOM).toString(32);
     String urlString = servers[0] + uri;
     
     HashMap<String, String> body = new HashMap<String, String>();
@@ -232,15 +253,18 @@ public class TentClientAsync {
     
     try {
       URL url = new URL(urlString);
-      String authHeader = RequestSigner.generateAuthorizationHeader(timestamp, nonce, "POST", uri, url.getHost(), url.getDefaultPort(), registrationResponse.getMacKey(), registrationResponse.getMacKeyId(), "HmacSHA256");
+      // TODO: Is it really not necessary to sign access token requests???
+//      String authHeader = RequestSigner.generateAuthorizationHeader(timestamp, nonce, "POST", uri, url.getHost(), url.getDefaultPort(), registrationResponse.getMacKey(), registrationResponse.getMacKeyId(), "HmacSHA256");
+//        .addHeader("Authorization", authHeader)
 
-      objectMapper.writeValue(bodyJson, ObjectNode.class);
+      objectMapper.writeValue(bodyJson, body);
+      
+      LOGGER.debug("body=" + bodyJson);
       
       return httpClient.preparePost(urlString)
         .addHeader("Accept", TENT_MIME_TYPE)
         .addHeader(HttpHeaders.CONTENT_TYPE, TENT_MIME_TYPE)
         .setBody(bodyJson.toString())
-        .addHeader("Authorization", authHeader)
         .execute(new AsyncCompletionHandler<AccessToken>() {
           @Override
           public AccessToken onCompleted(Response response) throws Exception {
@@ -258,6 +282,10 @@ public class TentClientAsync {
     }
   }
   
+  public void setAccessToken(AccessToken accessToken) {
+    this.accessToken = accessToken;
+  }
+
   private void addServers(Profile.Core core) {
     servers = core.getServers();
   }

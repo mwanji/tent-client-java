@@ -13,9 +13,11 @@ public class Post {
   private String id;
   private String entity;
   @JsonProperty("published_at")
-  private int publishedAt;
+  private long publishedAt;
   @JsonProperty("received_at")
-  private int receivedAt;
+  private long receivedAt;
+  @JsonProperty("updated_at")
+  private long updatedAt;
   private Mention[] mentions;
   private String[] licenses;
   private String type;
@@ -41,20 +43,28 @@ public class Post {
     this.entity = entity;
   }
 
-  public int getPublishedAt() {
+  public long getPublishedAt() {
     return publishedAt;
   }
 
-  public void setPublishedAt(int publishedAt) {
+  public void setPublishedAt(long publishedAt) {
     this.publishedAt = publishedAt;
   }
 
-  public int getReceivedAt() {
+  public long getReceivedAt() {
     return receivedAt;
   }
 
-  public void setReceivedAt(int receivedAt) {
+  public void setReceivedAt(long receivedAt) {
     this.receivedAt = receivedAt;
+  }
+
+  public long getUpdatedAt() {
+    return updatedAt;
+  }
+
+  public void setUpdatedAt(long updatedAt) {
+    this.updatedAt = updatedAt;
   }
 
   public Mention[] getMentions() {

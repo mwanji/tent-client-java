@@ -55,6 +55,10 @@ public class TentClient {
     return waitFor(tentClientAsync.getPosts());
   }
   
+  public Post write(Post post) {
+    return waitFor(tentClientAsync.write(post));
+  }
+  
   public RegistrationResponse register(RegistrationRequest registrationRequest) {
     return waitFor(tentClientAsync.register(registrationRequest));
   }
