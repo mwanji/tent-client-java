@@ -21,7 +21,6 @@ public class RequestSigner {
     }
     
     String normalizedRequest = normalizeRequest(timestamp, nonce, httpMethod, uri, host, port);
-    
     SecretKeySpec spec = new SecretKeySpec(macKey.getBytes(Charsets.UTF_8), algorithm);
     try {
       Mac hmacSha256 = Mac.getInstance(algorithm);

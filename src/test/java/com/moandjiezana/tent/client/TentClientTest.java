@@ -8,7 +8,6 @@ import static org.fest.assertions.Assertions.assertThat;
 
 import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.restdriver.clientdriver.ClientDriverRequest.Method;
 import com.github.restdriver.clientdriver.ClientDriverRule;
 import com.google.common.base.Joiner;
@@ -21,15 +20,12 @@ import com.moandjiezana.tent.client.posts.Status;
 import com.moandjiezana.tent.client.users.Permissions;
 import com.moandjiezana.tent.client.users.Profile;
 import com.moandjiezana.tent.oauth.AccessToken;
-import com.ning.http.client.AsyncHttpClient;
 
 import java.awt.Desktop;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.StringWriter;
 import java.net.URI;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -108,7 +104,7 @@ public class TentClientTest {
   }
   
   @Test @Ignore
-  public void post_as_tent_status() throws JsonGenerationException, JsonMappingException, IOException, IllegalArgumentException, InterruptedException, ExecutionException {
+  public void post_as_java_client() throws JsonGenerationException, JsonMappingException, IOException, IllegalArgumentException, InterruptedException, ExecutionException {
     long time = System.currentTimeMillis() / 1000;
     
     TentClientAsync tentClient = new TentClientAsync("https://javaapiclient.tent.is");
@@ -116,8 +112,8 @@ public class TentClientTest {
     tentClient.getProfile().get();
     
     AccessToken accessToken = new AccessToken();
-    accessToken.setAccessToken("u:f467985c");
-    accessToken.setMacKey("5025b57edac48f0a5a028b788ac8fb46");
+    accessToken.setAccessToken("YOUR ID HERE");
+    accessToken.setMacKey("YOUR SECRET HERE");
     accessToken.setMacAlgorithm("hmacsha256");
     tentClient.setAccessToken(accessToken);
     
@@ -127,38 +123,16 @@ public class TentClientTest {
     Permissions permissions2 = new Permissions();
     permissions2.setPublicVisible(true);
     post.setPermissions(permissions2);
+    Mention mention = new Mention();
+    mention.setEntity("https://mwanji.tent.is");
+    post.setMentions(new Mention[] { mention });
     post.setLicenses(new String[] { "http://creativecommons.org/licenses/by/3.0/" });
     HashMap<String, Object> content = new HashMap<String, Object>();
-    content.put("text", "Posted from TentClient for Java, for real!");
+    content.put("text", "Posted console and mentioning mwanji");
     post.setContent(content);
     Post post2 = tentClient.write(post).get();
     
     System.out.println("post ID=" + post2.getId());
-    
-    AsyncHttpClient client = new AsyncHttpClient();
-    
-    HashMap<String, Object> body = new HashMap<String, Object>();
-    body.put("type", "https://tent.io/types/post/status/v0.1.0");
-    body.put("published_at", Long.toString(time));
-    HashMap<String, Boolean> permissions = new HashMap<String, Boolean>();
-    permissions.put("public", Boolean.TRUE);
-    body.put("permissions", permissions);
-    body.put("licenses", Arrays.asList("http://creativecommons.org/licenses/by/3.0/"));
-    content.put("text", "Posted from Eclipse.");
-    body.put("content", content);
-    
-    StringWriter bodyJson = new StringWriter();
-    new ObjectMapper().writeValue(bodyJson, body);
-    
-//    Response response = client.preparePost("https://javaapiclient.tent.is/tent/posts")
-//        .addHeader("Content-Type", "application/vnd.tent.v0+json")
-//      .addHeader("Accept", "application/vnd.tent.v0+json")
-//      .addHeader("Authorization", RequestSigner.generateAuthorizationHeader(time, new BigInteger(40, new SecureRandom()).toString(32), "POST", "/tent/posts", "javaapiclient.tent.is", 443, "c5988caced797f99e16e3418e8fc7ea5", "u:1d140c21", "hmacsha256"))
-//      .setBody(bodyJson.toString())
-//      .execute().get();
-//    
-//    System.out.println(response.getStatusCode() + " " + response.getStatusText());
-//    System.out.println(response.getResponseBody());
   }
   
   @Test @Ignore
@@ -173,14 +147,9 @@ public class TentClientTest {
     
     RegistrationRequest registrationRequest = new RegistrationRequest("TentClient for Java", "Running dev tests", "http://www.moandjiezana.com/tent-client-java", new String [] { "http://www.moandjiezana.com/tent-test/index.php" }, scopes);
     RegistrationResponse registrationResponse = tentClient.register(registrationRequest);
-//    registrationResponse.setId("9f6j0n");
-//    registrationResponse.setMacKeyId("a:c639be26");
-//    registrationResponse.setMacKey("2dc6222ef18799cb912185bd31425491");
-//    registrationResponse.setMacAlgorithm("hmac-sha-256");
     
     System.out.println("mac_key=" + registrationResponse.getMacKey());
     System.out.println("mac_key_id=" + registrationResponse.getMacKeyId());
-
     
     AuthorizationRequest authorizationRequest = new AuthorizationRequest(registrationResponse.getId(), "http://www.moandjiezana.com/tent-test/index.php");
     authorizationRequest.setScope(Joiner.on(',').join(registrationRequest.getScopes().keySet()));

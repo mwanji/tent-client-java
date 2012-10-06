@@ -249,7 +249,6 @@ public class TentClientAsync {
     HashMap<String, String> body = new HashMap<String, String>();
     body.put("code", code);
     body.put("token_type", "mac");
-    StringWriter bodyJson = new StringWriter();
     
     try {
       URL url = new URL(urlString);
@@ -257,14 +256,10 @@ public class TentClientAsync {
 //      String authHeader = RequestSigner.generateAuthorizationHeader(timestamp, nonce, "POST", uri, url.getHost(), url.getDefaultPort(), registrationResponse.getMacKey(), registrationResponse.getMacKeyId(), "HmacSHA256");
 //        .addHeader("Authorization", authHeader)
 
-      objectMapper.writeValue(bodyJson, body);
-      
-      LOGGER.debug("body=" + bodyJson);
-      
       return httpClient.preparePost(urlString)
         .addHeader("Accept", TENT_MIME_TYPE)
         .addHeader(HttpHeaders.CONTENT_TYPE, TENT_MIME_TYPE)
-        .setBody(bodyJson.toString())
+        .setBody(objectMapper.writeValueAsString(body))
         .execute(new AsyncCompletionHandler<AccessToken>() {
           @Override
           public AccessToken onCompleted(Response response) throws Exception {
