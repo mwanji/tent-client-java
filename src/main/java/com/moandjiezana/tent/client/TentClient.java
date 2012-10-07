@@ -1,10 +1,12 @@
 package com.moandjiezana.tent.client;
 
+import com.moandjiezana.tent.client.apps.AuthorizationRequest;
 import com.moandjiezana.tent.client.apps.RegistrationRequest;
 import com.moandjiezana.tent.client.apps.RegistrationResponse;
 import com.moandjiezana.tent.client.posts.Post;
 import com.moandjiezana.tent.client.users.Following;
 import com.moandjiezana.tent.client.users.Profile;
+import com.moandjiezana.tent.oauth.AccessToken;
 
 import java.util.List;
 import java.util.concurrent.Future;
@@ -61,6 +63,14 @@ public class TentClient {
   
   public RegistrationResponse register(RegistrationRequest registrationRequest) {
     return waitFor(tentClientAsync.register(registrationRequest));
+  }
+  
+  public String buildAuthorizationUrl(RegistrationResponse registrationResponse, AuthorizationRequest authorizationRequest) {
+    return tentClientAsync.buildAuthorizationUrl(registrationResponse, authorizationRequest);
+  }
+  
+  public AccessToken getAccessToken(RegistrationResponse registrationResponse, String code) {
+    return waitFor(tentClientAsync.getAccessToken(registrationResponse, code));
   }
   
   public TentClientAsync getAsync() {
