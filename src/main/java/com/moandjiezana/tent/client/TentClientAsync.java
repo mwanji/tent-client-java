@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Throwables;
 import com.google.common.net.HttpHeaders;
+import com.google.common.util.concurrent.Futures;
 import com.moandjiezana.tent.client.apps.AuthorizationRequest;
 import com.moandjiezana.tent.client.apps.RegistrationRequest;
 import com.moandjiezana.tent.client.apps.RegistrationResponse;
@@ -52,9 +53,9 @@ public class TentClientAsync {
   private final AsyncHttpClient httpClient;
   private final ObjectMapper objectMapper = new ObjectMapper();
 
-  private String[] servers;
-  private List<String> profileUrls;
   private final String entityUrl;
+  private List<String> profileUrls;
+  private Profile profile;
   private AccessToken accessToken;
 
   /**
@@ -67,7 +68,7 @@ public class TentClientAsync {
 
   public TentClientAsync(Profile profile, List<String> profileUrls) {
     this(profile.getCore().getEntity());
-    servers = profile.getCore().getServers();
+    this.profile = profile;
     this.profileUrls = profileUrls;
   }
 
@@ -82,7 +83,7 @@ public class TentClientAsync {
    *         Empty if no profile URLs found.
    */
   public Future<List<String>> discover(String method) {
-    servers = null;
+    profile = null;
     profileUrls = null;
     try {
       BoundRequestBuilder request = method.equals("HEAD") ? httpClient.prepareHead(entityUrl) : httpClient.prepareGet(entityUrl);
@@ -110,22 +111,23 @@ public class TentClientAsync {
    * @return
    */
   public Future<Profile> getProfile() {
+    if (profile != null) {
+      return Futures.immediateFuture(profile);
+    }
+    
     try {
       return httpClient.prepareGet(profileUrls.get(0)).addHeader("Accept", TENT_MIME_TYPE).execute(new AsyncCompletionHandler<Profile>() {
+
         @Override
         public Profile onCompleted(Response response) throws Exception {
           String responseBody = response.getResponseBody();
           LOGGER.debug(responseBody);
           JsonNode json = objectMapper.readValue(responseBody, JsonNode.class);
 
-          Profile profile = new Profile();
+          profile = new Profile();
 
           if (json.has(Profile.Core.URI)) {
             profile.setCore(objectMapper.convertValue(json.get(Profile.Core.URI), Profile.Core.class));
-
-            if (servers == null) {
-              addServers(profile.getCore());
-            }
           }
 
           if (json.has(Profile.Basic.URI)) {
@@ -142,7 +144,7 @@ public class TentClientAsync {
 
   public Future<List<Following>> getFollowings() {
     try {
-      return httpClient.prepareGet(servers[0] + "/followings").addHeader("Accept", TENT_MIME_TYPE).execute(new AsyncCompletionHandler<List<Following>>() {
+      return httpClient.prepareGet(getServer() + "/followings").addHeader("Accept", TENT_MIME_TYPE).execute(new AsyncCompletionHandler<List<Following>>() {
         @Override
         public List<Following> onCompleted(Response response) throws Exception {
           String responseBody = response.getResponseBody();
@@ -158,7 +160,7 @@ public class TentClientAsync {
 
   public Future<Following> getFollowing(Following following) {
     try {
-      return httpClient.prepareGet(servers[0] + "/followings/" + following.getId()).addHeader("Accept", TENT_MIME_TYPE)
+      return httpClient.prepareGet(getServer() + "/followings/" + following.getId()).addHeader("Accept", TENT_MIME_TYPE)
           .execute(new AsyncCompletionHandler<Following>() {
             @Override
             public Following onCompleted(Response response) throws Exception {
@@ -175,7 +177,13 @@ public class TentClientAsync {
 
   public Future<List<Post>> getPosts() {
     try {
-      return httpClient.prepareGet(servers[0] + "/posts").addHeader("Accept", TENT_MIME_TYPE).execute(new AsyncCompletionHandler<List<Post>>() {
+      URL url = new URL(getServer() + "/posts");
+      BoundRequestBuilder requestBuilder = httpClient.prepareGet(getServer() + "/posts").addHeader("Accept", TENT_MIME_TYPE);
+      if (isAuthorized()) {
+        requestBuilder.addHeader("Authorization", RequestSigner.generateAuthorizationHeader(System.currentTimeMillis() / 1000, new BigInteger(40, RANDOM).toString(32), "POST", url.getPath(), url.getHost(), url.getDefaultPort(), accessToken.getMacKey(), accessToken.getAccessToken(), accessToken.getMacAlgorithmForJava()));
+      }
+      
+      return requestBuilder.execute(new AsyncCompletionHandler<List<Post>>() {
         @Override
         public List<Post> onCompleted(Response response) throws Exception {
           String responseBody = response.getResponseBody();
@@ -189,13 +197,14 @@ public class TentClientAsync {
       throw new RuntimeException(e);
     }
   }
-  
+
   public Future<Post> write(Post post) {
     try {
-      return httpClient.preparePost(servers[0] + "/posts")
+      URL url = new URL(getServer() + "/posts");
+      return httpClient.preparePost(getServer() + "/posts")
           .addHeader("Content-Type", TENT_MIME_TYPE)
           .addHeader("Accept", TENT_MIME_TYPE)
-          .addHeader("Authorization", RequestSigner.generateAuthorizationHeader(System.currentTimeMillis() / 1000, new BigInteger(40, RANDOM).toString(32), "POST", "/tent/posts", "javaapiclient.tent.is", 443, accessToken.getMacKey(), accessToken.getAccessToken(), "hmacsha256"))
+          .addHeader("Authorization", RequestSigner.generateAuthorizationHeader(System.currentTimeMillis() / 1000, new BigInteger(40, RANDOM).toString(32), "POST", url.getPath(), url.getHost(), url.getDefaultPort(), accessToken.getMacKey(), accessToken.getAccessToken(), accessToken.getMacAlgorithmForJava()))
           .setBody(objectMapper.writeValueAsString(post))
           .execute(new AsyncCompletionHandler<Post>() {
             @Override
@@ -217,7 +226,7 @@ public class TentClientAsync {
     try {
       objectMapper.writeValue(jsonWriter, registrationRequest);
 
-      return httpClient.preparePost(servers[0] + "/apps").addHeader("Content-Type", TENT_MIME_TYPE).addHeader("Accept", TENT_MIME_TYPE)
+      return httpClient.preparePost(getServer() + "/apps").addHeader("Content-Type", TENT_MIME_TYPE).addHeader("Accept", TENT_MIME_TYPE)
           .setBody(jsonWriter.toString()).execute(new AsyncCompletionHandler<RegistrationResponse>() {
             @Override
             public RegistrationResponse onCompleted(Response response) throws Exception {
@@ -231,8 +240,11 @@ public class TentClientAsync {
     }
   }
 
+  /**
+   * @return An absolute URL that the user can be redirected to to authorise the app.
+   */
   public String buildAuthorizationUrl(RegistrationResponse registrationResponse, AuthorizationRequest authorizationRequest) {
-    return httpClient.prepareGet(servers[0] + "/oauth/authorize").addQueryParameter("client_id", registrationResponse.getId())
+    return httpClient.prepareGet(getServer() + "/oauth/authorize").addQueryParameter("client_id", registrationResponse.getId())
         .addQueryParameter("redirect_uri", authorizationRequest.getRedirectUri()).addQueryParameter("state", authorizationRequest.getState())
         .addQueryParameter("scope", authorizationRequest.getScope())
         .addQueryParameter("tent_profile_info_types", authorizationRequest.getTentProfileInfoTypes())
@@ -244,7 +256,7 @@ public class TentClientAsync {
     long timestamp = System.currentTimeMillis() / 1000;
     String uri = "/apps/" + registrationResponse.getId() + "/authorizations";
     String nonce = new BigInteger(40, RANDOM).toString(32);
-    String urlString = servers[0] + uri;
+    String urlString = getServer() + uri;
     
     HashMap<String, String> body = new HashMap<String, String>();
     body.put("code", code);
@@ -269,7 +281,9 @@ public class TentClientAsync {
             LOGGER.debug(Integer.toString(response.getStatusCode()));
             LOGGER.debug(responseBody);
             
-            return objectMapper.readValue(responseBody, AccessToken.class);
+            accessToken = objectMapper.readValue(responseBody, AccessToken.class);
+            
+            return accessToken;
           }
         });
     } catch (IOException e) {
@@ -279,10 +293,6 @@ public class TentClientAsync {
   
   public void setAccessToken(AccessToken accessToken) {
     this.accessToken = accessToken;
-  }
-
-  private void addServers(Profile.Core core) {
-    servers = core.getServers();
   }
 
   private void addProfileUrls(Response response) throws IOException {
@@ -315,5 +325,13 @@ public class TentClientAsync {
         profileUrls.add(element.attr("href"));
       }
     }
+  }
+  
+  private String getServer() {
+    return profile.getCore().getServers()[0];
+  }
+
+  private boolean isAuthorized() {
+    return accessToken != null;
   }
 }
