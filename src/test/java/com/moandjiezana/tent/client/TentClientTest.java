@@ -17,6 +17,7 @@ import com.moandjiezana.tent.client.apps.RegistrationResponse;
 import com.moandjiezana.tent.client.posts.Mention;
 import com.moandjiezana.tent.client.posts.Post;
 import com.moandjiezana.tent.client.posts.Status;
+import com.moandjiezana.tent.client.posts.content.StatusContent;
 import com.moandjiezana.tent.client.users.Permissions;
 import com.moandjiezana.tent.client.users.Profile;
 import com.moandjiezana.tent.oauth.AccessToken;
@@ -118,7 +119,6 @@ public class TentClientTest {
     tentClient.setAccessToken(accessToken);
     
     Post post = new Post();
-    post.setType("https://tent.io/types/post/status/v0.1.0");
     post.setPublishedAt(time);
     Permissions permissions2 = new Permissions();
     permissions2.setPublicVisible(true);
@@ -127,9 +127,9 @@ public class TentClientTest {
     mention.setEntity("https://mwanji.tent.is");
     post.setMentions(new Mention[] { mention });
     post.setLicenses(new String[] { "http://creativecommons.org/licenses/by/3.0/" });
-    HashMap<String, Object> content = new HashMap<String, Object>();
-    content.put("text", "Posted console and mentioning mwanji");
-    post.setContent(content);
+    StatusContent statusContent = new StatusContent();
+    statusContent.setText("Posted console and mentioning mwanji");
+    post.setContent(statusContent);
     Post post2 = tentClient.write(post).get();
     
     System.out.println("post ID=" + post2.getId());

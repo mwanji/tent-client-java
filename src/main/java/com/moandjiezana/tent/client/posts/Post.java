@@ -3,10 +3,10 @@ package com.moandjiezana.tent.client.posts;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.moandjiezana.tent.client.posts.content.PostContent;
 import com.moandjiezana.tent.client.users.Permissions;
 
 import java.io.StringWriter;
-import java.util.Map;
 
 public class Post {
 
@@ -21,7 +21,7 @@ public class Post {
   private Mention[] mentions;
   private String[] licenses;
   private String type;
-  private Map<String, Object> content;
+  private PostContent content;
   private Attachment[] attachments;
   private App app;
   private Permissions permissions;
@@ -91,7 +91,7 @@ public class Post {
     this.type = type;
   }
 
-  public Map<String, Object> getContent() {
+  public PostContent getContent() {
     return content;
   }
   
@@ -107,8 +107,13 @@ public class Post {
     }
   }
 
-  public void setContent(Map<String, Object> content) {
+  /**
+   * Also sets the result of {@link PostContent#getType()} as type of the post
+   * @param content
+   */
+  public void setContent(PostContent content) {
     this.content = content;
+    setType(content.getType());
   }
 
   public Attachment[] getAttachments() {
