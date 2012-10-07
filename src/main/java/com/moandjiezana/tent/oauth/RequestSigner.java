@@ -1,12 +1,12 @@
 package com.moandjiezana.tent.oauth;
 
+import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.base.Throwables;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
-import org.apache.commons.codec.Charsets;
 import org.apache.commons.codec.binary.Base64;
 
 public class RequestSigner {
