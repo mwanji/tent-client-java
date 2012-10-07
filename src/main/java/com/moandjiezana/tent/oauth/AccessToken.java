@@ -35,6 +35,14 @@ public class AccessToken {
   public String getMacAlgorithm() {
     return macAlgorithm;
   }
+  
+  public String getMacAlgorithmForJava() {
+    if ("hmac-sha-256".equals(getMacAlgorithm())) {
+      return "HmacSHA256";
+    }
+    
+    throw new IllegalArgumentException("Unknown Mac algorithm " + getMacAlgorithm());
+  }
 
   public void setMacAlgorithm(String macAlgorithm) {
     this.macAlgorithm = macAlgorithm;
