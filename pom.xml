@@ -47,11 +47,6 @@
     	</exclusions>
     </dependency>
     <dependency>
-    	<groupId>com.fasterxml.jackson.core</groupId>
-    	<artifactId>jackson-databind</artifactId>
-    	<version>2.0.6</version>
-    </dependency>
-    <dependency>
     	<groupId>com.github.rest-driver</groupId>
     	<artifactId>rest-client-driver</artifactId>
     	<version>1.1.27</version>
@@ -88,6 +83,12 @@
     	<groupId>ch.qos.logback</groupId>
     	<artifactId>logback-classic</artifactId>
     	<version>1.0.7</version>
+    	<scope>test</scope>
+    </dependency>
+    <dependency>
+    	<groupId>com.google.code.gson</groupId>
+    	<artifactId>gson</artifactId>
+    	<version>2.2.2</version>
     </dependency>
   </dependencies>
   <organization>

@@ -1,11 +1,14 @@
 package com.moandjiezana.tent.client;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Throwables;
 import com.google.common.net.HttpHeaders;
+import com.google.common.reflect.TypeToken;
 import com.google.common.util.concurrent.Futures;
+import com.google.gson.FieldNamingPolicy;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.moandjiezana.tent.client.apps.AuthorizationRequest;
 import com.moandjiezana.tent.client.apps.RegistrationRequest;
 import com.moandjiezana.tent.client.apps.RegistrationResponse;
@@ -22,7 +25,6 @@ import com.ning.http.client.Response;
 import com.ning.http.client.providers.jdk.JDKAsyncHttpProvider;
 
 import java.io.IOException;
-import java.io.StringWriter;
 import java.math.BigInteger;
 import java.net.URL;
 import java.security.SecureRandom;
@@ -49,9 +51,9 @@ public class TentClientAsync {
   private static final String TENT_REL_PROFILE = "https://tent.io/rels/profile";
   private static final Logger LOGGER = LoggerFactory.getLogger(TentClientAsync.class);
   private static final String TENT_MIME_TYPE = "application/vnd.tent.v0+json";
+  private static final Gson GSON = new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create();
 
   private final AsyncHttpClient httpClient;
-  private final ObjectMapper objectMapper = new ObjectMapper();
 
   private final String entityUrl;
   private List<String> profileUrls;
@@ -122,16 +124,17 @@ public class TentClientAsync {
         public Profile onCompleted(Response response) throws Exception {
           String responseBody = response.getResponseBody();
           LOGGER.debug(responseBody);
-          JsonNode json = objectMapper.readValue(responseBody, JsonNode.class);
+          JsonParser parser = new JsonParser();
+          JsonObject json = parser.parse(responseBody).getAsJsonObject();
 
           profile = new Profile();
 
           if (json.has(Profile.Core.URI)) {
-            profile.setCore(objectMapper.convertValue(json.get(Profile.Core.URI), Profile.Core.class));
+            profile.setCore(GSON.fromJson(json.get(Profile.Core.URI), Profile.Core.class));
           }
 
           if (json.has(Profile.Basic.URI)) {
-            profile.setBasic(objectMapper.convertValue(json.get(Profile.Basic.URI), Profile.Basic.class));
+            profile.setBasic(GSON.fromJson(json.get(Profile.Basic.URI), Profile.Basic.class));
           }
 
           return profile;
@@ -141,7 +144,7 @@ public class TentClientAsync {
       throw new RuntimeException(e);
     }
   }
-
+  
   public Future<List<Following>> getFollowings() {
     try {
       return httpClient.prepareGet(getServer() + "/followings").addHeader("Accept", TENT_MIME_TYPE).execute(new AsyncCompletionHandler<List<Following>>() {
@@ -150,7 +153,7 @@ public class TentClientAsync {
           String responseBody = response.getResponseBody();
           LOGGER.debug(responseBody);
 
-          return objectMapper.readValue(responseBody, new TypeReference<List<Following>>() {});
+          return GSON.fromJson(responseBody, new TypeToken<List<Following>>() {}.getType());
         }
       });
     } catch (Exception e) {
@@ -167,7 +170,7 @@ public class TentClientAsync {
               String responseBody = response.getResponseBody();
               LOGGER.debug(responseBody);
 
-              return objectMapper.readValue(responseBody, Following.class);
+              return GSON.fromJson(responseBody, Following.class);
             }
           });
     } catch (IOException e) {
@@ -189,8 +192,7 @@ public class TentClientAsync {
           String responseBody = response.getResponseBody();
           LOGGER.debug(responseBody);
 
-          return objectMapper.readValue(responseBody, new TypeReference<List<Post>>() {
-          });
+          return GSON.fromJson(responseBody, new TypeToken<List<Post>>() {}.getType());
         }
       });
     } catch (IOException e) {
@@ -205,7 +207,7 @@ public class TentClientAsync {
           .addHeader("Content-Type", TENT_MIME_TYPE)
           .addHeader("Accept", TENT_MIME_TYPE)
           .addHeader("Authorization", RequestSigner.generateAuthorizationHeader(System.currentTimeMillis() / 1000, new BigInteger(40, RANDOM).toString(32), "POST", url.getPath(), url.getHost(), url.getDefaultPort(), accessToken.getMacKey(), accessToken.getAccessToken(), accessToken.getMacAlgorithmForJava()))
-          .setBody(objectMapper.writeValueAsString(post))
+          .setBody(GSON.toJson(post))
           .execute(new AsyncCompletionHandler<Post>() {
             @Override
             public Post onCompleted(Response response) throws Exception {
@@ -213,7 +215,7 @@ public class TentClientAsync {
               LOGGER.debug(response.getStatusCode() + " " + response.getStatusText());
               LOGGER.debug(responseBody);
               
-              return objectMapper.readValue(responseBody, Post.class);
+              return GSON.fromJson(responseBody, Post.class);
             }
           });
     } catch (IOException e) {
@@ -222,17 +224,15 @@ public class TentClientAsync {
   }
 
   public Future<RegistrationResponse> register(RegistrationRequest registrationRequest) {
-    StringWriter jsonWriter = new StringWriter();
     try {
-      objectMapper.writeValue(jsonWriter, registrationRequest);
 
       return httpClient.preparePost(getServer() + "/apps").addHeader("Content-Type", TENT_MIME_TYPE).addHeader("Accept", TENT_MIME_TYPE)
-          .setBody(jsonWriter.toString()).execute(new AsyncCompletionHandler<RegistrationResponse>() {
+          .setBody(GSON.toJson(registrationRequest)).execute(new AsyncCompletionHandler<RegistrationResponse>() {
             @Override
             public RegistrationResponse onCompleted(Response response) throws Exception {
               String responseBody = response.getResponseBody();
               LOGGER.debug(responseBody);
-              return objectMapper.readValue(responseBody, RegistrationResponse.class);
+              return GSON.fromJson(responseBody, RegistrationResponse.class);
             }
           });
     } catch (Exception e) {
@@ -271,7 +271,7 @@ public class TentClientAsync {
       return httpClient.preparePost(urlString)
         .addHeader("Accept", TENT_MIME_TYPE)
         .addHeader(HttpHeaders.CONTENT_TYPE, TENT_MIME_TYPE)
-        .setBody(objectMapper.writeValueAsString(body))
+        .setBody(GSON.toJson(body))
         .execute(new AsyncCompletionHandler<AccessToken>() {
           @Override
           public AccessToken onCompleted(Response response) throws Exception {
@@ -281,7 +281,7 @@ public class TentClientAsync {
             LOGGER.debug(Integer.toString(response.getStatusCode()));
             LOGGER.debug(responseBody);
             
-            accessToken = objectMapper.readValue(responseBody, AccessToken.class);
+            accessToken = GSON.fromJson(responseBody, AccessToken.class);
             
             return accessToken;
           }

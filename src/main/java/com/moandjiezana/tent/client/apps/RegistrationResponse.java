@@ -1,9 +1,6 @@
 package com.moandjiezana.tent.client.apps;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
 
-@JsonIgnoreProperties(ignoreUnknown = true)
 public class RegistrationResponse {
 
   private String id;
@@ -23,7 +20,6 @@ public class RegistrationResponse {
     return macKeyId;
   }
 
-  @JsonProperty("mac_key_id")
   public void setMacKeyId(String macKeyId) {
     this.macKeyId = macKeyId;
   }
@@ -32,7 +28,6 @@ public class RegistrationResponse {
     return macKey;
   }
 
-  @JsonProperty("mac_key")
   public void setMacKey(String macKey) {
     this.macKey = macKey;
   }
@@ -41,7 +36,6 @@ public class RegistrationResponse {
     return macAlgorithm;
   }
 
-  @JsonProperty("mac_algorithm")
   public void setMacAlgorithm(String macAlgorithm) {
     this.macAlgorithm = macAlgorithm;
   }

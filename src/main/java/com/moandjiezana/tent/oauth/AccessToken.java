@@ -1,19 +1,14 @@
 package com.moandjiezana.tent.oauth;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class AccessToken {
 
-  @JsonProperty("access_token")
   private String accessToken;
   
-  @JsonProperty("mac_key")
   private String macKey;
   
-  @JsonProperty("mac_algorithm")
   private String macAlgorithm;
   
-  @JsonProperty("token_type")
   private String tokenType;
 
   public String getAccessToken() {

@@ -2,14 +2,16 @@ package com.moandjiezana.tent.client.posts;
 
 import static org.junit.Assert.assertEquals;
 
+import com.google.gson.Gson;
 import com.moandjiezana.tent.client.posts.content.PostContent;
+import com.moandjiezana.tent.client.posts.content.StatusContent;
 
 import org.junit.Test;
 
 public class PostTest {
 
   @Test
-  public void set_content_should_get_type_from_post_content() {
+  public void content_should_determine_post_type() {
     PostContent postContent = new PostContent() {
       @Override
       public String getType() {
@@ -21,5 +23,12 @@ public class PostTest {
     post.setContent(postContent);
     
     assertEquals(postContent.getType(), post.getType());
+  }
+  
+  @Test
+  public void should_return_content_as_requested_type() {
+    Post post = new Gson().fromJson("{content:{text:\"my text\"}}", Post.class);
+    
+    assertEquals("my text", post.getContentAs(StatusContent.class).getText());
   }
 }

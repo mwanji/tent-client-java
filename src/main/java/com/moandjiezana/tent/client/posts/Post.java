@@ -1,24 +1,28 @@
 package com.moandjiezana.tent.client.posts;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.reflect.TypeToken;
+import com.google.gson.Gson;
+import com.google.gson.annotations.Expose;
 import com.moandjiezana.tent.client.posts.content.PostContent;
 import com.moandjiezana.tent.client.users.Permissions;
 
+import java.util.Map;
+
 public class Post {
+  
+  private static final Gson gson = new Gson();
 
   private String id;
   private String entity;
-  @JsonProperty("published_at")
   private long publishedAt;
-  @JsonProperty("received_at")
   private long receivedAt;
-  @JsonProperty("updated_at")
   private long updatedAt;
   private Mention[] mentions;
   private String[] licenses;
   private String type;
-  private PostContent content;
+  private Map<String, Object> content;
+  @Expose(serialize = false, deserialize = false)
+  private PostContent postContent;
   private Attachment[] attachments;
   private App app;
   private Permissions permissions;
@@ -88,13 +92,11 @@ public class Post {
     this.type = type;
   }
 
-  public PostContent getContent() {
-    return content;
-  }
-  
-  @JsonIgnore
   public <T extends PostContent> T getContentAs(Class<T> contentClass) {
-    return contentClass.cast(getContent());
+    if (postContent == null || !contentClass.isAssignableFrom(postContent.getClass())) {
+      postContent = gson.fromJson(gson.toJson(content), contentClass);
+    }
+    return contentClass.cast(postContent);
   }
 
   /**
@@ -102,10 +104,11 @@ public class Post {
    * @param content
    */
   public void setContent(PostContent content) {
-    this.content = content;
+    this.postContent = content;
+    this.content = gson.fromJson(gson.toJson(content), new TypeToken<Map<String, Object>>() {}.getType());
     setType(content.getType());
   }
-
+  
   public Attachment[] getAttachments() {
     return attachments;
   }

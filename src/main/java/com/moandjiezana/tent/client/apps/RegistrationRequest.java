@@ -1,7 +1,5 @@
 package com.moandjiezana.tent.client.apps;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 import java.util.Map;
 
 public class RegistrationRequest {
@@ -9,7 +7,6 @@ public class RegistrationRequest {
   private final String name;
   private final String description;
   private final String url;
-  @JsonProperty("redirect_uris")
   private final String[] redirectUris;
   private final Map<String, String> scopes;
   private String icon;

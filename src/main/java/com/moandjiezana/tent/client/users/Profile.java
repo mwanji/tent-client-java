@@ -1,7 +1,5 @@
 package com.moandjiezana.tent.client.users;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 import java.util.Map;
 
 public class Profile {
@@ -63,7 +61,6 @@ public class Profile {
       return avatarUrl;
     }
     
-    @JsonProperty("avatar_url")
     public void setAvatarUrl(String avatarUrl) {
       this.avatarUrl = avatarUrl;
     }

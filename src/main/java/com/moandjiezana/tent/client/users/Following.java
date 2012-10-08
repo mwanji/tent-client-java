@@ -1,7 +1,5 @@
 package com.moandjiezana.tent.client.users;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 import java.util.Map;
 
 public class Following {
@@ -20,7 +18,6 @@ public class Following {
   public String getRemoteId() {
     return remoteId;
   }
-  @JsonProperty("remote_id")
   public void setRemoteId(String remoteId) {
     this.remoteId = remoteId;
   }
