@@ -1,22 +1,22 @@
 package com.moandjiezana.tent.client.users;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.gson.annotations.SerializedName;
 
 import java.util.Map;
 
 public class Permissions {
 
-  @JsonProperty("public")
-  private boolean publicVisible;
+  @SerializedName("public")
+  private boolean _public;
   private Group[] groups;
   private Map<String, Boolean> entities;
 
-  public boolean isPublicVisible() {
-    return publicVisible;
+  public boolean isPublic() {
+    return _public;
   }
 
-  public void setPublicVisible(boolean publicVisible) {
-    this.publicVisible = publicVisible;
+  public void setPublic(boolean _public) {
+    this._public = _public;
   }
 
   public Map<String, Boolean> getEntities() {
