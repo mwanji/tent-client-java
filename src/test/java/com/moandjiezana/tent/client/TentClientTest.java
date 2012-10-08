@@ -182,6 +182,15 @@ public class TentClientTest {
   }
   
   @Test
+  public void should_discover_relative_profile_url_from_header() throws Exception {
+    server.addExpectation(onRequestTo("/").withMethod(Method.HEAD), giveEmptyResponse().withContentType("text/html;charset=utf-8").withHeader("Link", "</tent/profile>; rel=\"https://tent.io/rels/profile\""));
+    
+    List<String> profileUrls = tentClient().discover("HEAD").get();
+    
+    assertThat(profileUrls).containsOnly(profileUrl());
+  }
+  
+  @Test
   public void should_discover_no_profile_url_when_none_in_header() throws Exception {
     server.addExpectation(onRequestTo("/").withMethod(Method.HEAD), giveEmptyResponse().withContentType("text/html;charset=utf-8"));
     

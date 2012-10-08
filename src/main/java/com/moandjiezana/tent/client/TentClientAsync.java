@@ -310,7 +310,8 @@ public class TentClientAsync {
         for (String rawLink : rawLinks) {
           String[] urlAndRel = rawLink.split(";");
           if (urlAndRel.length == 2) {
-            profileUrls.add(urlAndRel[0].substring(1, urlAndRel[0].length() - 1));
+            String profileUrl = urlAndRel[0].substring(1, urlAndRel[0].length() - 1);
+            profileUrls.add(makeAbsoluteUrl(profileUrl));
           }
         }
       }
@@ -327,6 +328,13 @@ public class TentClientAsync {
     }
   }
   
+  private String makeAbsoluteUrl(String url) {
+    if (url.startsWith("http://") || url.startsWith("https://")) {
+      return url;
+    }
+    return entityUrl + url;
+  }
+
   private String getServer() {
     return profile.getCore().getServers()[0];
   }
