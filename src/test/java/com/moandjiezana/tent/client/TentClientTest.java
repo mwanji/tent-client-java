@@ -246,7 +246,7 @@ public class TentClientTest {
   private void printPosts(List<Post> posts) {
     for (Post post : posts) {
       if (post.getType().equals(Status.URI)) {
-        Status status = post.getContentAs(Status.class);
+        StatusContent status = post.getContentAs(StatusContent.class);
         System.out.println(status.getText());
         if (post.getMentions().length > 0) {
           System.out.println("Mentions: ");
