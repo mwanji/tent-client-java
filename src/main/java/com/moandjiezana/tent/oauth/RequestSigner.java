@@ -3,11 +3,10 @@ package com.moandjiezana.tent.oauth;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.base.Throwables;
+import com.ning.http.util.Base64;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
-
-import org.apache.commons.codec.binary.Base64;
 
 public class RequestSigner {
 
@@ -27,7 +26,7 @@ public class RequestSigner {
       hmacSha256.init(spec);
       byte[] macBytes = hmacSha256.doFinal(normalizedRequest.getBytes(Charsets.UTF_8));
 
-      String mac = Base64.encodeBase64String(macBytes);
+      String mac = Base64.encode(macBytes);
       
       return "MAC id=\"" + macKeyId + "\", ts=\"" + timestamp + "\", nonce=\"" + nonce + "\", mac=\"" + mac + "\""; 
     } catch (Exception e) {
