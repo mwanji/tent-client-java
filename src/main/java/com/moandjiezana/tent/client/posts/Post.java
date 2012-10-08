@@ -2,11 +2,8 @@ package com.moandjiezana.tent.client.posts;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.moandjiezana.tent.client.posts.content.PostContent;
 import com.moandjiezana.tent.client.users.Permissions;
-
-import java.io.StringWriter;
 
 public class Post {
 
@@ -96,15 +93,8 @@ public class Post {
   }
   
   @JsonIgnore
-  public <T> T getContentAs(Class<T> contentClass) {
-    StringWriter jsonWriter = new StringWriter();
-    try {
-      ObjectMapper objectMapper = new ObjectMapper();
-      objectMapper.writeValue(jsonWriter, getContent());
-      return objectMapper.readValue(jsonWriter.toString(), contentClass);
-    } catch (Exception e) {
-      throw new RuntimeException(e);
-    }
+  public <T extends PostContent> T getContentAs(Class<T> contentClass) {
+    return contentClass.cast(getContent());
   }
 
   /**
