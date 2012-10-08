@@ -2,7 +2,7 @@ package com.moandjiezana.tent.client.posts;
 
 import java.math.BigDecimal;
 
-public class Location {
+public class GeoJsonPoint {
   private String type;
   private BigDecimal[] coordinates;
 
