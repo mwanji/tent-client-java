@@ -57,7 +57,7 @@ public class TentClientTest {
 
   @Test @Ignore
   public void register() throws Exception {
-    TentClient tentClient = new TentClient("https://mwanji.tent.is");
+    TentClient tentClient = new TentClient("https://javaapiclient.tent.is");
     tentClient.discover();
     Profile profile = tentClient.getProfile();
 //    
@@ -113,26 +113,28 @@ public class TentClientTest {
     tentClient.getProfile().get();
     
     AccessToken accessToken = new AccessToken();
-    accessToken.setAccessToken("YOUR ID HERE");
+    accessToken.setAccessToken("YOUR API ID HERE");
     accessToken.setMacKey("YOUR SECRET HERE");
-    accessToken.setMacAlgorithm("hmacsha256");
+    accessToken.setMacAlgorithm("hmac-sha-256");
     tentClient.setAccessToken(accessToken);
     
     Post post = new Post();
     post.setPublishedAt(time);
-    Permissions permissions2 = new Permissions();
-    permissions2.setPublicVisible(true);
-    post.setPermissions(permissions2);
-    Mention mention = new Mention();
-    mention.setEntity("https://mwanji.tent.is");
-    post.setMentions(new Mention[] { mention });
+    Permissions permissions = new Permissions();
+    permissions.setPublic(true);
+    post.setPermissions(permissions);
+//    Mention mention = new Mention();
+//    mention.setEntity("https://mwanji.tent.is");
+//    post.setMentions(new Mention[] { mention });
     post.setLicenses(new String[] { "http://creativecommons.org/licenses/by/3.0/" });
     StatusContent statusContent = new StatusContent();
-    statusContent.setText("Posted console and mentioning mwanji");
+    statusContent.setText("Yet another test post, but now using Gson! Hoping to deserialize the return value correctly!");
     post.setContent(statusContent);
-    Post post2 = tentClient.write(post).get();
     
-    System.out.println("post ID=" + post2.getId());
+    Post returnedPost = tentClient.write(post).get();
+    
+    System.out.println("post ID=" + returnedPost.getId());
+    System.out.println("content=" + returnedPost.getContentAs(StatusContent.class).getText());
   }
   
   @Test @Ignore
