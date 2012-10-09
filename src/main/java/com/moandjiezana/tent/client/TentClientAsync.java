@@ -25,9 +25,7 @@ import com.ning.http.client.Response;
 import com.ning.http.client.providers.jdk.JDKAsyncHttpProvider;
 
 import java.io.IOException;
-import java.math.BigInteger;
 import java.net.URL;
-import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -47,7 +45,6 @@ import org.slf4j.LoggerFactory;
  */
 public class TentClientAsync {
   
-  private static final SecureRandom RANDOM = new SecureRandom();
   private static final String TENT_REL_PROFILE = "https://tent.io/rels/profile";
   private static final Logger LOGGER = LoggerFactory.getLogger(TentClientAsync.class);
   private static final String TENT_MIME_TYPE = "application/vnd.tent.v0+json";
@@ -183,7 +180,7 @@ public class TentClientAsync {
       URL url = new URL(getServer() + "/posts");
       BoundRequestBuilder requestBuilder = httpClient.prepareGet(getServer() + "/posts").addHeader("Accept", TENT_MIME_TYPE);
       if (isAuthorized()) {
-        requestBuilder.addHeader("Authorization", RequestSigner.generateAuthorizationHeader(System.currentTimeMillis() / 1000, new BigInteger(40, RANDOM).toString(32), "POST", url.getPath(), url.getHost(), url.getDefaultPort(), accessToken.getMacKey(), accessToken.getAccessToken(), accessToken.getMacAlgorithmForJava()));
+        requestBuilder.addHeader("Authorization", RequestSigner.generateAuthorizationHeader("GET", url, accessToken));
       }
       
       return requestBuilder.execute(new AsyncCompletionHandler<List<Post>>() {
@@ -195,7 +192,7 @@ public class TentClientAsync {
           return GSON.fromJson(responseBody, new TypeToken<List<Post>>() {}.getType());
         }
       });
-    } catch (IOException e) {
+    } catch (Exception e) {
       throw new RuntimeException(e);
     }
   }
@@ -206,7 +203,7 @@ public class TentClientAsync {
       return httpClient.preparePost(getServer() + "/posts")
           .addHeader("Content-Type", TENT_MIME_TYPE)
           .addHeader("Accept", TENT_MIME_TYPE)
-          .addHeader("Authorization", RequestSigner.generateAuthorizationHeader(System.currentTimeMillis() / 1000, new BigInteger(40, RANDOM).toString(32), "POST", url.getPath(), url.getHost(), url.getDefaultPort(), accessToken.getMacKey(), accessToken.getAccessToken(), accessToken.getMacAlgorithmForJava()))
+          .addHeader("Authorization", RequestSigner.generateAuthorizationHeader("POST", url, accessToken))
           .setBody(GSON.toJson(post))
           .execute(new AsyncCompletionHandler<Post>() {
             @Override
@@ -253,9 +250,7 @@ public class TentClientAsync {
   }
   
   public Future<AccessToken> getAccessToken(RegistrationResponse registrationResponse, String code) {
-    long timestamp = System.currentTimeMillis() / 1000;
     String uri = "/apps/" + registrationResponse.getId() + "/authorizations";
-    String nonce = new BigInteger(40, RANDOM).toString(32);
     String urlString = getServer() + uri;
     
     HashMap<String, String> body = new HashMap<String, String>();
@@ -264,13 +259,16 @@ public class TentClientAsync {
     
     try {
       URL url = new URL(urlString);
-      // TODO: Is it really not necessary to sign access token requests???
-//      String authHeader = RequestSigner.generateAuthorizationHeader(timestamp, nonce, "POST", uri, url.getHost(), url.getDefaultPort(), registrationResponse.getMacKey(), registrationResponse.getMacKeyId(), "HmacSHA256");
-//        .addHeader("Authorization", authHeader)
+      AccessToken tempToken = new AccessToken();
+      tempToken.setAccessToken(registrationResponse.getId());
+      tempToken.setMacKey(registrationResponse.getMacKey());
+      tempToken.setMacAlgorithm(registrationResponse.getMacAlgorithm());
+      String authHeader = RequestSigner.generateAuthorizationHeader("POST", url, tempToken);
 
       return httpClient.preparePost(urlString)
         .addHeader("Accept", TENT_MIME_TYPE)
         .addHeader(HttpHeaders.CONTENT_TYPE, TENT_MIME_TYPE)
+        .addHeader("Authorization", authHeader)
         .setBody(GSON.toJson(body))
         .execute(new AsyncCompletionHandler<AccessToken>() {
           @Override

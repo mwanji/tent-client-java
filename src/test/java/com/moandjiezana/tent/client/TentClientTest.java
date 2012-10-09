@@ -128,7 +128,7 @@ public class TentClientTest {
 //    post.setMentions(new Mention[] { mention });
     post.setLicenses(new String[] { "http://creativecommons.org/licenses/by/3.0/" });
     StatusContent statusContent = new StatusContent();
-    statusContent.setText("Yet another test post, but now using Gson! Hoping to deserialize the return value correctly!");
+    statusContent.setText("Is this thing still on?");
     post.setContent(statusContent);
     
     Post returnedPost = tentClient.write(post).get();

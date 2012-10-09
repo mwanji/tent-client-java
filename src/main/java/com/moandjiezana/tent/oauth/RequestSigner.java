@@ -1,40 +1,57 @@
 package com.moandjiezana.tent.oauth;
 
-import com.google.common.base.Charsets;
-import com.google.common.base.Joiner;
 import com.google.common.base.Throwables;
 import com.ning.http.util.Base64;
+
+import java.net.URL;
+import java.util.Random;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
 public class RequestSigner {
+  private static final Random RANDOM = new Random();
 
-  private static final Joiner NEW_LINES = Joiner.on("\n");
+  public static String generateAuthorizationHeader(String httpMethod, URL url, AccessToken accessToken) {
+      int port = url.getPort() > -1 ? url.getPort() : url.getDefaultPort(); 
 
-  public static String generateAuthorizationHeader(long timestamp, String nonce, String httpMethod, String uri, String host, int port, String macKey, String macKeyId, String algorithm) {
-    if (host.startsWith("http://")) {
-      host = host.replace("http://", "");
-    } else if (host.startsWith("https://")) {
-      host = host.replace("https://", "");
-    }
-    
-    String normalizedRequest = normalizeRequest(timestamp, nonce, httpMethod, uri, host, port);
-    SecretKeySpec spec = new SecretKeySpec(macKey.getBytes(Charsets.UTF_8), algorithm);
+      String ts = Long.toString(generateTs());
+      String nonce = generateNonce();
+
+      StringBuilder sb = new StringBuilder()
+        .append(ts).append("\n")
+        .append(nonce).append("\n")
+        .append(httpMethod).append("\n")
+        .append(url.getPath()).append("\n")
+        .append(url.getHost()).append("\n")
+        .append(port).append("\n")
+        .append("").append("\n"); // empty ext field;
+
+      String sigBase = sb.toString();
+      String mac = generateMac(sigBase, accessToken.getMacKey());
+
+      String macFormat = "MAC id=\"%s\", ts=\"%s\", nonce=\"%s\", mac=\"%s\"";
+      return String.format(macFormat, accessToken.getAccessToken(), ts, nonce, mac);
+  }
+  
+  protected static long generateTs () {
+    return System.currentTimeMillis() / 1000;
+  }
+  
+  protected static String generateNonce () {
+    return Long.toHexString(RANDOM.nextLong());
+  }
+  
+  private static String generateMac (String base, String key) {
     try {
-      Mac hmacSha256 = Mac.getInstance(algorithm);
-      hmacSha256.init(spec);
-      byte[] macBytes = hmacSha256.doFinal(normalizedRequest.getBytes(Charsets.UTF_8));
-
-      String mac = Base64.encode(macBytes);
-      
-      return "MAC id=\"" + macKeyId + "\", ts=\"" + timestamp + "\", nonce=\"" + nonce + "\", mac=\"" + mac + "\""; 
-    } catch (Exception e) {
+      SecretKeySpec keySpec = new SecretKeySpec(key.getBytes(), "HmacSHA256");
+      Mac mac = Mac.getInstance("HmacSHA256");
+      mac.init(keySpec);
+    
+      return Base64.encode(mac.doFinal(base.getBytes()));
+    }
+    catch (Exception e) {
       throw Throwables.propagate(e);
     }
-  }
-
-  private static String normalizeRequest(long timestamp, String nonce, String httpMethod, String uri, String host, int port) {
-    return NEW_LINES.join(timestamp, nonce, httpMethod.toUpperCase(), uri, host, port, "", "");
   }
 }
