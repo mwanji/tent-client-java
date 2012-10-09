@@ -177,8 +177,9 @@ public class TentClientAsync {
 
   public Future<List<Post>> getPosts() {
     try {
-      URL url = new URL(getServer() + "/posts");
-      BoundRequestBuilder requestBuilder = httpClient.prepareGet(getServer() + "/posts").addHeader("Accept", TENT_MIME_TYPE);
+      String urlString = getServer() + "/posts";
+      URL url = new URL(urlString);
+      BoundRequestBuilder requestBuilder = httpClient.prepareGet(urlString).addHeader("Accept", TENT_MIME_TYPE);
       if (isAuthorized()) {
         requestBuilder.addHeader("Authorization", RequestSigner.generateAuthorizationHeader("GET", url, accessToken));
       }
@@ -194,6 +195,27 @@ public class TentClientAsync {
       });
     } catch (Exception e) {
       throw new RuntimeException(e);
+    }
+  }
+
+  public Future<Post> getPost(String id) {
+    try {
+      String urlString = getServer() + "/posts/" + id;
+      URL url = new URL(urlString);
+      
+      BoundRequestBuilder requestBuilder = httpClient.prepareGet(urlString).addHeader("Accept", TENT_MIME_TYPE);
+      if (isAuthorized()) {
+        requestBuilder.addHeader("Authorization", RequestSigner.generateAuthorizationHeader("GET", url, accessToken));
+      }
+      
+      return requestBuilder.execute(new AsyncCompletionHandler<Post>() {
+        @Override
+        public Post onCompleted(Response response) throws Exception {
+          return GSON.fromJson(response.getResponseBody(), Post.class);
+        }
+      });
+    } catch (Exception e) {
+      throw Throwables.propagate(e);
     }
   }
 

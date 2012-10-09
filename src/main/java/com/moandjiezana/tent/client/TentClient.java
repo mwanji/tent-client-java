@@ -56,6 +56,10 @@ public class TentClient {
   public List<Post> getPosts() {
     return waitFor(tentClientAsync.getPosts());
   }
+
+  public Post getPost(String id) {
+    return waitFor(tentClientAsync.getPost(id));
+  }
   
   public Post write(Post post) {
     return waitFor(tentClientAsync.write(post));
