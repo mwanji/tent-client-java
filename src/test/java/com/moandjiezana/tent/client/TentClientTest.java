@@ -16,7 +16,6 @@ import com.moandjiezana.tent.client.apps.RegistrationRequest;
 import com.moandjiezana.tent.client.apps.RegistrationResponse;
 import com.moandjiezana.tent.client.posts.Mention;
 import com.moandjiezana.tent.client.posts.Post;
-import com.moandjiezana.tent.client.posts.Status;
 import com.moandjiezana.tent.client.posts.content.StatusContent;
 import com.moandjiezana.tent.client.users.Permissions;
 import com.moandjiezana.tent.client.users.Profile;
@@ -50,9 +49,20 @@ public class TentClientTest {
     tentClient.discover();
     Profile profile = tentClient.getProfile();
     
-    for (String server : profile.getCore().getServers()) {
-      System.out.println(server);
-    }
+    List<Post> posts = tentClient.getPosts();
+    
+    printPosts(posts);
+  }
+  
+  @Test @Ignore
+  public void discover_redirected_entity() {
+    TentClient tentClient = new TentClient("http://longearstestaccount.tumblr.com");
+    tentClient.discover();
+    Profile profile = tentClient.getProfile();
+    
+    List<Post> posts = tentClient.getPosts();
+    
+    printPosts(posts);
   }
 
   @Test @Ignore
@@ -96,7 +106,7 @@ public class TentClientTest {
     AuthorizationRequest authorizationRequest = new AuthorizationRequest(registrationResponse.getId(), registrationRequest.getRedirectUris()[0]);
     authorizationRequest.setScope("write_profile");
     authorizationRequest.setState("myState");
-    authorizationRequest.setTentPostTypes(Status.URI);
+    authorizationRequest.setTentPostTypes(Post.Types.status("v0.1.0"));
     authorizationRequest.setTentProfileInfoTypes(Profile.Core.URI, Profile.Basic.URI);
     
     String authorizationUrl = tentClient.getAsync().buildAuthorizationUrl(registrationResponse, authorizationRequest);
@@ -156,7 +166,7 @@ public class TentClientTest {
     AuthorizationRequest authorizationRequest = new AuthorizationRequest(registrationResponse.getId(), "http://www.moandjiezana.com/tent-test/index.php");
     authorizationRequest.setScope(Joiner.on(',').join(registrationRequest.getScopes().keySet()));
     authorizationRequest.setState("myState");
-    authorizationRequest.setTentPostTypes(Status.URI);
+    authorizationRequest.setTentPostTypes(Post.Types.status("v0.1.0"));
     authorizationRequest.setTentProfileInfoTypes(Profile.Core.URI, Profile.Basic.URI);
     
     String authorizationUrl = tentClient.getAsync().buildAuthorizationUrl(registrationResponse, authorizationRequest);
@@ -247,7 +257,7 @@ public class TentClientTest {
 
   private void printPosts(List<Post> posts) {
     for (Post post : posts) {
-      if (post.getType().equals(Status.URI)) {
+      if (post.getType().equals(Post.Types.status("v0.1.0"))) {
         StatusContent status = post.getContentAs(StatusContent.class);
         System.out.println(status.getText());
         if (post.getMentions().length > 0) {

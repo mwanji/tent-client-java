@@ -1,8 +1,11 @@
 package com.moandjiezana.tent.client.posts.content;
 
+import com.moandjiezana.tent.client.posts.Post;
+
 import java.util.List;
 
 public class EssayContent implements PostContent {
+  private static final String URI = Post.Types.essay("v0.1.0");
 
   private String title;
   private String excerpt;
@@ -11,7 +14,7 @@ public class EssayContent implements PostContent {
 
   @Override
   public String getType() {
-    return "https://tent.io/types/post/essay/v0.1.0";
+    return URI;
   }
 
   public String getTitle() {

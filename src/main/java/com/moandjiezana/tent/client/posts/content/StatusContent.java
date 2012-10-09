@@ -1,30 +1,32 @@
 package com.moandjiezana.tent.client.posts.content;
 
-import java.util.Map;
+import com.moandjiezana.tent.client.posts.GeoJsonPoint;
+import com.moandjiezana.tent.client.posts.Post;
 
 public class StatusContent implements PostContent {
+  private static final String URI = Post.Types.status("v0.1.0");
 
   private String text;
-  private Map<String, Object> location;
-
+  private GeoJsonPoint location;
+  
   @Override
   public String getType() {
-    return "https://tent.io/types/post/status/v0.1.0";
+    return URI;
   }
-
+  
   public String getText() {
     return text;
   }
-
+  
   public void setText(String text) {
     this.text = text;
   }
 
-  public Map<String, Object> getLocation() {
+  public GeoJsonPoint getLocation() {
     return location;
   }
 
-  public void setLocation(Map<String, Object> location) {
+  public void setLocation(GeoJsonPoint location) {
     this.location = location;
   }
 }

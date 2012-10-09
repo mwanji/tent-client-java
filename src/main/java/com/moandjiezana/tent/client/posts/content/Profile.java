@@ -1,10 +1,17 @@
-package com.moandjiezana.tent.client.posts;
+package com.moandjiezana.tent.client.posts.content;
 
-public class Profile {
-  public static final String URI = "https://tent.io/types/post/profile/v0.1.0";
+import com.moandjiezana.tent.client.posts.Post;
+
+public class Profile implements PostContent {
+  public static final String URI = Post.Types.profile("v0.1.0");
   
   private String action;
   private String[] types;
+  
+  @Override
+  public String getType() {
+    return URI;
+  }
 
   public String getAction() {
     return action;

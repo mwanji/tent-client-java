@@ -10,6 +10,24 @@ import java.util.Map;
 
 public class Post {
   
+  public static class Types {
+    public static String status(String version) {
+      return "https://tent.io/types/post/status/" + version;
+    }
+    
+    public static String essay(String version) {
+      return "https://tent.io/types/post/essay/" + version;
+    }
+    
+    public static String repost(String version) {
+      return "https://tent.io/types/post/repost/" + version;
+    }
+    
+    public static String profile(String version) {
+      return "https://tent.io/types/post/profile/" + version;
+    }
+  }
+  
   private static final Gson gson = new Gson();
 
   private String id;

@@ -1,10 +1,17 @@
-package com.moandjiezana.tent.client.posts;
+package com.moandjiezana.tent.client.posts.content;
 
-public class Repost {
-  public static final String URI = "https://tent.io/types/post/repost/v0.1.0";
+import com.moandjiezana.tent.client.posts.Post;
+
+public class Repost implements PostContent {
+  private static final String URI = Post.Types.repost("v0.1.0");
   
   private String entity;
   private String id;
+  
+  @Override
+  public String getType() {
+    return URI;
+  }
 
   public String getEntity() {
     return entity;
