@@ -10,10 +10,10 @@ import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.github.restdriver.clientdriver.ClientDriverRequest.Method;
 import com.github.restdriver.clientdriver.ClientDriverRule;
-import com.google.common.base.Joiner;
 import com.moandjiezana.tent.client.apps.AuthorizationRequest;
 import com.moandjiezana.tent.client.apps.RegistrationRequest;
 import com.moandjiezana.tent.client.apps.RegistrationResponse;
+import com.moandjiezana.tent.client.internal.com.google.common.base.Joiner;
 import com.moandjiezana.tent.client.posts.Mention;
 import com.moandjiezana.tent.client.posts.Post;
 import com.moandjiezana.tent.client.posts.content.StatusContent;
@@ -241,6 +241,20 @@ public class TentClientTest {
     server.addExpectation(onRequestTo("/apps").withMethod(Method.POST), giveResponse("{\"name\": \"FooApp\",\"description\": \"Does amazing foos with your data\",\"url\": \"http://example.com\",\n\"icon\": \"http://example.com/icon.png\",\"redirect_uris\": [\"https://app.example.com/tent/callback\"],\"scopes\": {\"write_profile\": \"Uses an app profile section to describe foos\",\"read_followings\": \"Calculates foos based on your followings\"},\"id\": \"fbh9mv\",\"mac_key_id\": \"a:960fedee\",\"mac_key\": \"f7ef29fd0b7ec539f3f7f404aee0a866\",\"mac_algorithm\": \"hmac-sha-256\",\"authorizations\": []}"));
     
     tentClient.register(new RegistrationRequest("unit_test", "description", "test_url", new String[] {}, new HashMap<String, String>())).get();
+  }
+  
+  @Test
+  public void get_posts_should_accept_null_query() throws Exception {
+    Profile profile = new Profile();
+    Profile.Core core = new Profile.Core();
+    core.setServers(new String[] { server.getBaseUrl() });
+    profile.setCore(core);
+    
+    TentClientAsync tentClient = new TentClientAsync(profile, asList(profileUrl()));
+    
+    server.addExpectation(onRequestTo("/posts"), giveEmptyResponse());
+
+    tentClient.getPosts(null).get();
   }
 
   private String profileUrl() {

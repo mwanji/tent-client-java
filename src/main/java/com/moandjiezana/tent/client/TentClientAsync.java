@@ -13,6 +13,7 @@ import com.moandjiezana.tent.client.apps.AuthorizationRequest;
 import com.moandjiezana.tent.client.apps.RegistrationRequest;
 import com.moandjiezana.tent.client.apps.RegistrationResponse;
 import com.moandjiezana.tent.client.posts.Post;
+import com.moandjiezana.tent.client.posts.PostQuery;
 import com.moandjiezana.tent.client.users.Following;
 import com.moandjiezana.tent.client.users.Profile;
 import com.moandjiezana.tent.oauth.AccessToken;
@@ -21,6 +22,7 @@ import com.ning.http.client.AsyncCompletionHandler;
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.AsyncHttpClient.BoundRequestBuilder;
 import com.ning.http.client.AsyncHttpClientConfig;
+import com.ning.http.client.FluentStringsMap;
 import com.ning.http.client.Response;
 import com.ning.http.client.providers.jdk.JDKAsyncHttpProvider;
 
@@ -45,6 +47,7 @@ import org.slf4j.LoggerFactory;
  */
 public class TentClientAsync {
   
+  private static final RequestSigner REQUEST_SIGNER = new RequestSigner();
   private static final String TENT_REL_PROFILE = "https://tent.io/rels/profile";
   private static final Logger LOGGER = LoggerFactory.getLogger(TentClientAsync.class);
   private static final String TENT_MIME_TYPE = "application/vnd.tent.v0+json";
@@ -176,12 +179,24 @@ public class TentClientAsync {
   }
 
   public Future<List<Post>> getPosts() {
+    return getPosts(null);
+  }
+
+  public Future<List<Post>> getPosts(PostQuery query) {
     try {
       String urlString = getServer() + "/posts";
       URL url = new URL(urlString);
+      
       BoundRequestBuilder requestBuilder = httpClient.prepareGet(urlString).addHeader("Accept", TENT_MIME_TYPE);
       if (isAuthorized()) {
-        requestBuilder.addHeader("Authorization", RequestSigner.generateAuthorizationHeader("GET", url, accessToken));
+        requestBuilder.addHeader("Authorization", REQUEST_SIGNER.generateAuthorizationHeader("GET", url, accessToken));
+      }
+      
+      if (query != null) {
+        FluentStringsMap queryStringParameters = new FluentStringsMap();
+        queryStringParameters.add("post_types", query.getPostTypes());
+        
+        requestBuilder.setQueryParameters(queryStringParameters);
       }
       
       return requestBuilder.execute(new AsyncCompletionHandler<List<Post>>() {
@@ -205,13 +220,16 @@ public class TentClientAsync {
       
       BoundRequestBuilder requestBuilder = httpClient.prepareGet(urlString).addHeader("Accept", TENT_MIME_TYPE);
       if (isAuthorized()) {
-        requestBuilder.addHeader("Authorization", RequestSigner.generateAuthorizationHeader("GET", url, accessToken));
+        requestBuilder.addHeader("Authorization", REQUEST_SIGNER.generateAuthorizationHeader("GET", url, accessToken));
       }
       
       return requestBuilder.execute(new AsyncCompletionHandler<Post>() {
         @Override
         public Post onCompleted(Response response) throws Exception {
-          return GSON.fromJson(response.getResponseBody(), Post.class);
+          String responseBody = response.getResponseBody();
+          LOGGER.debug(responseBody);
+
+          return GSON.fromJson(responseBody, Post.class);
         }
       });
     } catch (Exception e) {
@@ -225,7 +243,7 @@ public class TentClientAsync {
       return httpClient.preparePost(getServer() + "/posts")
           .addHeader("Content-Type", TENT_MIME_TYPE)
           .addHeader("Accept", TENT_MIME_TYPE)
-          .addHeader("Authorization", RequestSigner.generateAuthorizationHeader("POST", url, accessToken))
+          .addHeader("Authorization", REQUEST_SIGNER.generateAuthorizationHeader("POST", url, accessToken))
           .setBody(GSON.toJson(post))
           .execute(new AsyncCompletionHandler<Post>() {
             @Override
@@ -285,7 +303,7 @@ public class TentClientAsync {
       tempToken.setAccessToken(registrationResponse.getId());
       tempToken.setMacKey(registrationResponse.getMacKey());
       tempToken.setMacAlgorithm(registrationResponse.getMacAlgorithm());
-      String authHeader = RequestSigner.generateAuthorizationHeader("POST", url, tempToken);
+      String authHeader = REQUEST_SIGNER.generateAuthorizationHeader("POST", url, tempToken);
 
       return httpClient.preparePost(urlString)
         .addHeader("Accept", TENT_MIME_TYPE)

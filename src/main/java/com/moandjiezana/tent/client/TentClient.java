@@ -4,6 +4,7 @@ import com.moandjiezana.tent.client.apps.AuthorizationRequest;
 import com.moandjiezana.tent.client.apps.RegistrationRequest;
 import com.moandjiezana.tent.client.apps.RegistrationResponse;
 import com.moandjiezana.tent.client.posts.Post;
+import com.moandjiezana.tent.client.posts.PostQuery;
 import com.moandjiezana.tent.client.users.Following;
 import com.moandjiezana.tent.client.users.Profile;
 import com.moandjiezana.tent.oauth.AccessToken;
@@ -55,6 +56,10 @@ public class TentClient {
   
   public List<Post> getPosts() {
     return waitFor(tentClientAsync.getPosts());
+  }
+  
+  public List<Post> getPosts(PostQuery query) {
+    return waitFor(tentClientAsync.getPosts(query));
   }
 
   public Post getPost(String id) {
