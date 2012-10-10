@@ -1,6 +1,6 @@
 package com.moandjiezana.tent.client.apps;
 
-import com.google.common.base.Joiner;
+import com.moandjiezana.tent.client.internal.com.google.common.base.Joiner;
 
 
 
