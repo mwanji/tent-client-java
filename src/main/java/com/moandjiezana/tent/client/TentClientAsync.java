@@ -300,7 +300,7 @@ public class TentClientAsync {
     try {
       URL url = new URL(urlString);
       AccessToken tempToken = new AccessToken();
-      tempToken.setAccessToken(registrationResponse.getId());
+      tempToken.setAccessToken(registrationResponse.getMacKeyId());
       tempToken.setMacKey(registrationResponse.getMacKey());
       tempToken.setMacAlgorithm(registrationResponse.getMacAlgorithm());
       String authHeader = REQUEST_SIGNER.generateAuthorizationHeader("POST", url, tempToken);
