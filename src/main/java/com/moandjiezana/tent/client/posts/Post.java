@@ -1,8 +1,8 @@
 package com.moandjiezana.tent.client.posts;
 
-import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 import com.google.gson.annotations.Expose;
+import com.google.gson.reflect.TypeToken;
 import com.moandjiezana.tent.client.posts.content.PostContent;
 import com.moandjiezana.tent.client.users.Permissions;
 

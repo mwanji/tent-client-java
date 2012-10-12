@@ -1,17 +1,15 @@
 package com.moandjiezana.tent.client;
 
-import com.google.common.base.Throwables;
-import com.google.common.net.HttpHeaders;
-import com.google.common.reflect.TypeToken;
-import com.google.common.util.concurrent.Futures;
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.google.gson.reflect.TypeToken;
 import com.moandjiezana.tent.client.apps.AuthorizationRequest;
 import com.moandjiezana.tent.client.apps.RegistrationRequest;
 import com.moandjiezana.tent.client.apps.RegistrationResponse;
+import com.moandjiezana.tent.client.internal.com.google.common.base.Throwables;
 import com.moandjiezana.tent.client.posts.Post;
 import com.moandjiezana.tent.client.posts.PostQuery;
 import com.moandjiezana.tent.client.users.Following;
@@ -32,7 +30,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -114,7 +115,7 @@ public class TentClientAsync {
    */
   public Future<Profile> getProfile() {
     if (profile != null) {
-      return Futures.immediateFuture(profile);
+      return immediateFuture();
     }
     
     try {
@@ -307,7 +308,7 @@ public class TentClientAsync {
 
       return httpClient.preparePost(urlString)
         .addHeader("Accept", TENT_MIME_TYPE)
-        .addHeader(HttpHeaders.CONTENT_TYPE, TENT_MIME_TYPE)
+        .addHeader("Content-Type", TENT_MIME_TYPE)
         .addHeader("Authorization", authHeader)
         .setBody(GSON.toJson(body))
         .execute(new AsyncCompletionHandler<AccessToken>() {
@@ -379,5 +380,34 @@ public class TentClientAsync {
 
   private boolean isAuthorized() {
     return accessToken != null;
+  }
+
+  private Future<Profile> immediateFuture() {
+    return new Future<Profile>() {
+      @Override
+      public boolean cancel(boolean mayInterruptIfRunning) {
+        return false;
+      }
+
+      @Override
+      public boolean isCancelled() {
+        return false;
+      }
+
+      @Override
+      public boolean isDone() {
+        return true;
+      }
+
+      @Override
+      public Profile get() throws InterruptedException, ExecutionException {
+        return profile;
+      }
+
+      @Override
+      public Profile get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
+        return profile;
+      }
+    };
   }
 }

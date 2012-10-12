@@ -1,6 +1,6 @@
 package com.moandjiezana.tent.oauth;
 
-import com.google.common.base.Throwables;
+import com.moandjiezana.tent.client.internal.com.google.common.base.Throwables;
 import com.ning.http.util.Base64;
 
 import java.net.URL;
