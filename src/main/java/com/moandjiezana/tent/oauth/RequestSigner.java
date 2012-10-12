@@ -12,7 +12,7 @@ import javax.crypto.spec.SecretKeySpec;
 public class RequestSigner {
   private static final Random RANDOM = new Random();
 
-  public static String generateAuthorizationHeader(String httpMethod, URL url, AccessToken accessToken) {
+  public String generateAuthorizationHeader(String httpMethod, URL url, AccessToken accessToken) {
       int port = url.getPort() > -1 ? url.getPort() : url.getDefaultPort(); 
 
       String ts = Long.toString(generateTs());
@@ -34,11 +34,12 @@ public class RequestSigner {
       return String.format(macFormat, accessToken.getAccessToken(), ts, nonce, mac);
   }
   
-  protected static long generateTs () {
-    return System.currentTimeMillis() / 1000;
+  protected long generateTs () {
+    int startAt = 1262304000; // 2010-01-01T00:00:00Z
+    return (System.currentTimeMillis() / 1000) - startAt;
   }
   
-  protected static String generateNonce () {
+  protected String generateNonce () {
     return Long.toHexString(RANDOM.nextLong());
   }
   
