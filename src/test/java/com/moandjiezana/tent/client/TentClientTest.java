@@ -109,7 +109,7 @@ public class TentClientTest {
     authorizationRequest.setTentPostTypes(Post.Types.status("v0.1.0"));
     authorizationRequest.setTentProfileInfoTypes(Profile.Core.URI, Profile.Basic.URI);
     
-    String authorizationUrl = tentClient.getAsync().buildAuthorizationUrl(registrationResponse, authorizationRequest);
+    String authorizationUrl = tentClient.getAsync().buildAuthorizationUrl(authorizationRequest);
     System.out.println("Auth URL: " + authorizationUrl);
     Desktop.getDesktop().browse(new URI(authorizationUrl));
   }
@@ -169,7 +169,7 @@ public class TentClientTest {
     authorizationRequest.setTentPostTypes(Post.Types.status("v0.1.0"));
     authorizationRequest.setTentProfileInfoTypes(Profile.Core.URI, Profile.Basic.URI);
     
-    String authorizationUrl = tentClient.getAsync().buildAuthorizationUrl(registrationResponse, authorizationRequest);
+    String authorizationUrl = tentClient.getAsync().buildAuthorizationUrl(authorizationRequest);
     System.out.println("Auth URL: " + authorizationUrl);
     Desktop.getDesktop().browse(new URI(authorizationUrl));
     

@@ -9,14 +9,16 @@ import com.moandjiezana.tent.client.users.Following;
 import com.moandjiezana.tent.client.users.Profile;
 import com.moandjiezana.tent.oauth.AccessToken;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Future;
 
 /**
- * A synchronous wrapper around {@link TentClientAsync}
+ * A blocking, higher-level wrapper around {@link TentClientAsync}
  */
 public class TentClient {
   private final TentClientAsync tentClientAsync;
+  private List<String> profileUrls = Collections.<String>emptyList();
   
   /**
    * Use the default constructor only to discover an entity.
@@ -33,16 +35,24 @@ public class TentClient {
    * Obtains the profile URLs for the given entity, first by HEAD, then by GET, if necessary.
    */
   public List<String> discover() {
-    List<String> profileUrls = waitFor(tentClientAsync.discover("HEAD"));
+    profileUrls = waitFor(tentClientAsync.discover("HEAD"));
     
-    if (!profileUrls.isEmpty()) {
-      return profileUrls;
+    if (profileUrls.isEmpty()) {
+      profileUrls = waitFor(tentClientAsync.discover("GET"));
     }
     
-    return waitFor(tentClientAsync.discover("GET"));
+    return profileUrls;
   }
   
+  /**
+   * If discovery has not been performed, will do it first.
+   * @return
+   */
   public Profile getProfile() {
+    if (profileUrls.isEmpty()) {
+      discover();
+    }
+    
     return waitFor(tentClientAsync.getProfile());
   }
   
@@ -74,12 +84,12 @@ public class TentClient {
     return waitFor(tentClientAsync.register(registrationRequest));
   }
   
-  public String buildAuthorizationUrl(RegistrationResponse registrationResponse, AuthorizationRequest authorizationRequest) {
-    return tentClientAsync.buildAuthorizationUrl(registrationResponse, authorizationRequest);
+  public String buildAuthorizationUrl(AuthorizationRequest authorizationRequest) {
+    return tentClientAsync.buildAuthorizationUrl(authorizationRequest);
   }
   
   public AccessToken getAccessToken(RegistrationResponse registrationResponse, String code) {
-    return waitFor(tentClientAsync.getAccessToken(registrationResponse, code));
+    return waitFor(tentClientAsync.getAccessToken(code));
   }
   
   public TentClientAsync getAsync() {

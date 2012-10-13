@@ -60,6 +60,7 @@ public class TentClientAsync {
   private List<String> profileUrls;
   private Profile profile;
   private AccessToken accessToken;
+  private RegistrationResponse registrationResponse;
 
   /**
    * Use the default constructor only to discover an entity.
@@ -94,12 +95,12 @@ public class TentClientAsync {
       return request.addHeader("Accept", TENT_MIME_TYPE).execute(new AsyncCompletionHandler<List<String>>() {
         @Override
         public List<String> onCompleted(Response response) throws Exception {
-          if (response.getStatusCode() == 405) {
-            return Collections.emptyList();
-          } else {
+          if (response.getStatusCode() == 200) {
             addProfileUrls(response);
-
+            
             return profileUrls;
+          } else {
+            return Collections.emptyList();
           }
         }
       });
@@ -263,14 +264,16 @@ public class TentClientAsync {
 
   public Future<RegistrationResponse> register(RegistrationRequest registrationRequest) {
     try {
-
       return httpClient.preparePost(getServer() + "/apps").addHeader("Content-Type", TENT_MIME_TYPE).addHeader("Accept", TENT_MIME_TYPE)
           .setBody(GSON.toJson(registrationRequest)).execute(new AsyncCompletionHandler<RegistrationResponse>() {
             @Override
             public RegistrationResponse onCompleted(Response response) throws Exception {
               String responseBody = response.getResponseBody();
               LOGGER.debug(responseBody);
-              return GSON.fromJson(responseBody, RegistrationResponse.class);
+              RegistrationResponse registrationResponse = GSON.fromJson(responseBody, RegistrationResponse.class);
+              setRegistrationResponse(registrationResponse);
+              
+              return registrationResponse;
             }
           });
     } catch (Exception e) {
@@ -281,7 +284,7 @@ public class TentClientAsync {
   /**
    * @return An absolute URL that the user can be redirected to to authorise the app.
    */
-  public String buildAuthorizationUrl(RegistrationResponse registrationResponse, AuthorizationRequest authorizationRequest) {
+  public String buildAuthorizationUrl(AuthorizationRequest authorizationRequest) {
     return httpClient.prepareGet(getServer() + "/oauth/authorize").addQueryParameter("client_id", registrationResponse.getId())
         .addQueryParameter("redirect_uri", authorizationRequest.getRedirectUri()).addQueryParameter("state", authorizationRequest.getState())
         .addQueryParameter("scope", authorizationRequest.getScope())
@@ -290,7 +293,7 @@ public class TentClientAsync {
         .addQueryParameter("tent_notification_url", authorizationRequest.getTentNotificationUrl()).build().getUrl();
   }
   
-  public Future<AccessToken> getAccessToken(RegistrationResponse registrationResponse, String code) {
+  public Future<AccessToken> getAccessToken(String code) {
     String uri = "/apps/" + registrationResponse.getId() + "/authorizations";
     String urlString = getServer() + uri;
     
@@ -332,6 +335,10 @@ public class TentClientAsync {
   
   public void setAccessToken(AccessToken accessToken) {
     this.accessToken = accessToken;
+  }
+
+  public void setRegistrationResponse(RegistrationResponse registration) {
+    this.registrationResponse = registration;
   }
 
   private void addProfileUrls(Response response) throws IOException {
