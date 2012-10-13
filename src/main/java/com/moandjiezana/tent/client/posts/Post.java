@@ -26,6 +26,10 @@ public class Post {
     public static String profile(String version) {
       return "https://tent.io/types/post/profile/" + version;
     }
+
+    public static String photo(String version) {
+      return "https://tent.io/types/post/photo/" + version;
+    }
   }
   
   private static final Gson gson = new Gson();
