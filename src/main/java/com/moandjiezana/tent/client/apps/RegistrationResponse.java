@@ -7,6 +7,7 @@ public class RegistrationResponse {
   private String macKeyId;
   private String macKey;
   private String macAlgorithm;
+  private String[] redirectUris;
 
   public String getId() {
     return id;
@@ -38,5 +39,13 @@ public class RegistrationResponse {
 
   public void setMacAlgorithm(String macAlgorithm) {
     this.macAlgorithm = macAlgorithm;
+  }
+
+  public String[] getRedirectUris() {
+    return redirectUris;
+  }
+
+  public void setRedirectUris(String[] redirectUris) {
+    this.redirectUris = redirectUris;
   }
 }
