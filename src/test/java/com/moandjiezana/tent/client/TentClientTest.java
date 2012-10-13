@@ -177,7 +177,7 @@ public class TentClientTest {
     BufferedReader bufferRead = new BufferedReader(new InputStreamReader(System.in));
     String code = bufferRead.readLine();
     
-    AccessToken accessToken = tentClient.getAsync().getAccessToken(registrationResponse, code).get();
+    AccessToken accessToken = tentClient.getAsync().getAccessToken(code).get();
     
     System.out.println("Access Token");
     System.out.println("access_token=" + accessToken.getAccessToken());

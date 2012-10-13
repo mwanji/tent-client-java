@@ -95,7 +95,7 @@ public class TentClientAsync {
       return request.addHeader("Accept", TENT_MIME_TYPE).execute(new AsyncCompletionHandler<List<String>>() {
         @Override
         public List<String> onCompleted(Response response) throws Exception {
-          if (response.getStatusCode() == 200) {
+          if (response.getStatusCode() == 200 || response.getStatusCode() == 204) {
             addProfileUrls(response);
             
             return profileUrls;
