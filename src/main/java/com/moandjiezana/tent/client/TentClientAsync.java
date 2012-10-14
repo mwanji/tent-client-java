@@ -190,17 +190,18 @@ public class TentClientAsync {
       URL url = new URL(urlString);
       
       BoundRequestBuilder requestBuilder = httpClient.prepareGet(urlString).addHeader("Accept", TENT_MIME_TYPE);
-      if (isAuthorized()) {
-        requestBuilder.addHeader("Authorization", REQUEST_SIGNER.generateAuthorizationHeader("GET", url, accessToken));
-      }
       
       if (query != null) {
         FluentStringsMap queryStringParameters = new FluentStringsMap();
         queryStringParameters.add("post_types", query.getPostTypes());
         
         requestBuilder.setQueryParameters(queryStringParameters);
+        url = new URL(urlString + "?" + query);
       }
       
+      if (isAuthorized()) {
+        requestBuilder.addHeader("Authorization", REQUEST_SIGNER.generateAuthorizationHeader("GET", url, accessToken));
+      }
       return requestBuilder.execute(new AsyncCompletionHandler<List<Post>>() {
         @Override
         public List<Post> onCompleted(Response response) throws Exception {

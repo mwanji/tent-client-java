@@ -2,6 +2,7 @@ package com.moandjiezana.tent.oauth;
 
 import com.moandjiezana.tent.client.internal.com.google.common.base.Throwables;
 import com.ning.http.util.Base64;
+import com.ning.http.util.UTF8UrlEncoder;
 
 import java.net.URL;
 import java.util.Random;
@@ -22,12 +23,21 @@ public class RequestSigner {
         .append(ts).append("\n")
         .append(nonce).append("\n")
         .append(httpMethod).append("\n")
-        .append(url.getPath()).append("\n")
+        .append(url.getPath());
+      
+      if (url.getQuery() != null) {
+        
+        String encodedQuery = UTF8UrlEncoder.encode(url.getQuery()).replaceAll("%3D", "=");
+        sb.append("?").append(encodedQuery);
+      }
+      
+      sb.append("\n")
         .append(url.getHost()).append("\n")
         .append(port).append("\n")
         .append("").append("\n"); // empty ext field;
 
       String sigBase = sb.toString();
+      System.out.println("string to sign=" + sigBase);
       String mac = generateMac(sigBase, accessToken.getMacKey());
 
       String macFormat = "MAC id=\"%s\", ts=\"%s\", nonce=\"%s\", mac=\"%s\"";
