@@ -27,7 +27,7 @@ public class RequestSigner {
       
       if (url.getQuery() != null) {
         
-        String encodedQuery = UTF8UrlEncoder.encode(url.getQuery()).replaceAll("%3D", "=");
+        String encodedQuery = UTF8UrlEncoder.encode(url.getQuery()).replaceAll("%3D", "=").replaceAll("%26", "&");
         sb.append("?").append(encodedQuery);
       }
       
@@ -45,8 +45,7 @@ public class RequestSigner {
   }
   
   protected long generateTs () {
-    int startAt = 1262304000; // 2010-01-01T00:00:00Z
-    return (System.currentTimeMillis() / 1000) - startAt;
+    return (System.currentTimeMillis() / 1000);
   }
   
   protected String generateNonce () {

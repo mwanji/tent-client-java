@@ -21,6 +21,20 @@ public class PostQueryTest {
     assertEquals("post_types=http://a.status.type,http://b.status.type", postQuery.toString());
   }
   
+  @Test
+  public void should_restrict_on_entity() throws Exception {
+    PostQuery postQuery = new PostQuery().entity("https://www.example.com");
+    
+    assertEquals("entity=https://www.example.com", postQuery.toString());
+  }
+  
+  @Test
+  public void should_combine_restrictions() {
+    PostQuery postQuery = new PostQuery().entity("https://www.example.com").postTypes("http://a.status.type", "http://b.status.type");
+    
+    assertEquals("post_types=http://a.status.type,http://b.status.type&entity=https://www.example.com", postQuery.toString());
+  }
+  
   @Test @Ignore
   public void explore() throws Exception {
     Profile profile = new Profile();

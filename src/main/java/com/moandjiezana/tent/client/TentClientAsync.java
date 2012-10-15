@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -70,10 +71,9 @@ public class TentClientAsync {
     this.httpClient = new AsyncHttpClient(new JDKAsyncHttpProvider(new AsyncHttpClientConfig.Builder().setRequestTimeoutInMs(10000).build()));
   }
 
-  public TentClientAsync(Profile profile, List<String> profileUrls) {
+  public TentClientAsync(Profile profile) {
     this(profile.getCore().getEntity());
     this.profile = profile;
-    this.profileUrls = profileUrls;
   }
 
   /**
@@ -193,7 +193,10 @@ public class TentClientAsync {
       
       if (query != null) {
         FluentStringsMap queryStringParameters = new FluentStringsMap();
-        queryStringParameters.add("post_types", query.getPostTypes());
+        
+        for (Entry<String, String[]> entry : query.toMap().entrySet()) {
+          queryStringParameters.add(entry.getKey(), entry.getValue());
+        }
         
         requestBuilder.setQueryParameters(queryStringParameters);
         url = new URL(urlString + "?" + query);
