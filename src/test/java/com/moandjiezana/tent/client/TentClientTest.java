@@ -3,7 +3,6 @@ package com.moandjiezana.tent.client;
 import static com.github.restdriver.clientdriver.RestClientDriver.giveEmptyResponse;
 import static com.github.restdriver.clientdriver.RestClientDriver.giveResponse;
 import static com.github.restdriver.clientdriver.RestClientDriver.onRequestTo;
-import static java.util.Arrays.asList;
 import static org.fest.assertions.Assertions.assertThat;
 
 import com.fasterxml.jackson.core.JsonGenerationException;
@@ -236,7 +235,7 @@ public class TentClientTest {
     core.setServers(new String[] { server.getBaseUrl() });
     profile.setCore(core);
     
-    TentClientAsync tentClient = new TentClientAsync(profile, asList(profileUrl()));
+    TentClientAsync tentClient = new TentClientAsync(profile);
     
     server.addExpectation(onRequestTo("/apps").withMethod(Method.POST), giveResponse("{\"name\": \"FooApp\",\"description\": \"Does amazing foos with your data\",\"url\": \"http://example.com\",\n\"icon\": \"http://example.com/icon.png\",\"redirect_uris\": [\"https://app.example.com/tent/callback\"],\"scopes\": {\"write_profile\": \"Uses an app profile section to describe foos\",\"read_followings\": \"Calculates foos based on your followings\"},\"id\": \"fbh9mv\",\"mac_key_id\": \"a:960fedee\",\"mac_key\": \"f7ef29fd0b7ec539f3f7f404aee0a866\",\"mac_algorithm\": \"hmac-sha-256\",\"authorizations\": []}"));
     
@@ -250,7 +249,7 @@ public class TentClientTest {
     core.setServers(new String[] { server.getBaseUrl() });
     profile.setCore(core);
     
-    TentClientAsync tentClient = new TentClientAsync(profile, asList(profileUrl()));
+    TentClientAsync tentClient = new TentClientAsync(profile);
     
     server.addExpectation(onRequestTo("/posts"), giveEmptyResponse());
 

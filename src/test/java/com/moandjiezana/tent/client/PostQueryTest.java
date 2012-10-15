@@ -6,7 +6,6 @@ import com.moandjiezana.tent.client.posts.Post;
 import com.moandjiezana.tent.client.posts.PostQuery;
 import com.moandjiezana.tent.client.users.Profile;
 
-import java.util.Collections;
 import java.util.List;
 
 import org.junit.Ignore;
@@ -42,7 +41,7 @@ public class PostQueryTest {
     core.setServers(new String[] { "https://javaapiclient.tent.is/tent" });
     profile.setCore(core);
     
-    TentClient tentClient = new TentClient(profile, Collections.<String>emptyList());
+    TentClient tentClient = new TentClient(profile);
     List<Post> essays = tentClient.getAsync().getPosts(new PostQuery().postTypes(Post.Types.essay("v0.1.0"))).get();
     
     for (Post essay : essays) {

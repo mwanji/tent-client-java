@@ -27,8 +27,8 @@ public class TentClient {
     tentClientAsync = new TentClientAsync(entityUrl);
   }
   
-  public TentClient(Profile profile, List<String> profileUrls) {
-    tentClientAsync = new TentClientAsync(profile, profileUrls);
+  public TentClient(Profile profile) {
+    tentClientAsync = new TentClientAsync(profile);
   }
   
   /**
