@@ -1,5 +1,6 @@
 package com.moandjiezana.tent.client.users;
 
+import java.util.HashMap;
 import java.util.Map;
 
 public class Profile {
@@ -113,5 +114,19 @@ public class Profile {
 
   public void setBasic(Profile.Basic basic) {
     this.basic = basic;
+  }
+
+  public Map<String, Object> toMap() {
+    HashMap<String, Object> map = new HashMap<String, Object>();
+    
+    if (getCore() != null) {
+      map.put(Profile.Core.URI, getCore());
+    }
+
+    if (getBasic() != null) {
+      map.put(Profile.Basic.URI, getBasic());
+    }
+    
+    return map;
   }
 }

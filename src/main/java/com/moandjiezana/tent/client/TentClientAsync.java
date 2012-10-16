@@ -3,8 +3,6 @@ package com.moandjiezana.tent.client;
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
 import com.moandjiezana.tent.client.apps.AuthorizationRequest;
 import com.moandjiezana.tent.client.apps.RegistrationRequest;
@@ -14,6 +12,7 @@ import com.moandjiezana.tent.client.posts.Post;
 import com.moandjiezana.tent.client.posts.PostQuery;
 import com.moandjiezana.tent.client.users.Following;
 import com.moandjiezana.tent.client.users.Profile;
+import com.moandjiezana.tent.json.ProfileTypeAdapter;
 import com.moandjiezana.tent.oauth.AccessToken;
 import com.moandjiezana.tent.oauth.RequestSigner;
 import com.ning.http.client.AsyncCompletionHandler;
@@ -53,7 +52,7 @@ public class TentClientAsync {
   private static final String TENT_REL_PROFILE = "https://tent.io/rels/profile";
   private static final Logger LOGGER = LoggerFactory.getLogger(TentClientAsync.class);
   private static final String TENT_MIME_TYPE = "application/vnd.tent.v0+json";
-  private static final Gson GSON = new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create();
+  private static final Gson GSON = new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).registerTypeAdapter(Profile.class, new ProfileTypeAdapter()).create();
 
   private final AsyncHttpClient httpClient;
 
@@ -64,13 +63,16 @@ public class TentClientAsync {
   private RegistrationResponse registrationResponse;
 
   /**
-   * Use the default constructor only to discover an entity.
+   * @param entityUrl An undiscovered entity.
    */
   public TentClientAsync(String entityUrl) {
     this.entityUrl = entityUrl;
     this.httpClient = new AsyncHttpClient(new JDKAsyncHttpProvider(new AsyncHttpClientConfig.Builder().setRequestTimeoutInMs(10000).build()));
   }
 
+  /**
+   * @param profile A previously-discovered entity.
+   */
   public TentClientAsync(Profile profile) {
     this(profile.getCore().getEntity());
     this.profile = profile;
@@ -80,7 +82,6 @@ public class TentClientAsync {
    * Obtains the profile URLs for the given entity. All future method calls use
    * these URLs.
    * 
-   * @param entityUrl
    * @param method
    *          can be HEAD or GET.
    * @return profile URLs, for convenience, as they are also stored internally.
@@ -126,20 +127,8 @@ public class TentClientAsync {
         public Profile onCompleted(Response response) throws Exception {
           String responseBody = response.getResponseBody();
           LOGGER.debug(responseBody);
-          JsonParser parser = new JsonParser();
-          JsonObject json = parser.parse(responseBody).getAsJsonObject();
 
-          profile = new Profile();
-
-          if (json.has(Profile.Core.URI)) {
-            profile.setCore(GSON.fromJson(json.get(Profile.Core.URI), Profile.Core.class));
-          }
-
-          if (json.has(Profile.Basic.URI)) {
-            profile.setBasic(GSON.fromJson(json.get(Profile.Basic.URI), Profile.Basic.class));
-          }
-
-          return profile;
+          return GSON.fromJson(responseBody, Profile.class);
         }
       });
     } catch (Exception e) {
