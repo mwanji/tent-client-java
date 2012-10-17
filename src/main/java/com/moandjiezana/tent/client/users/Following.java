@@ -7,7 +7,7 @@ public class Following {
   private String id;
   private String remoteId;
   private String entity;
-  private Map<String, String> permissions;
+  private Map<String, Object> permissions;
   
   public String getId() {
     return id;
@@ -27,10 +27,10 @@ public class Following {
   public void setEntity(String entity) {
     this.entity = entity;
   }
-  public Map<String, String> getPermissions() {
+  public Map<String, Object> getPermissions() {
     return permissions;
   }
-  public void setPermissions(Map<String, String> permissions) {
+  public void setPermissions(Map<String, Object> permissions) {
     this.permissions = permissions;
   }
 }
