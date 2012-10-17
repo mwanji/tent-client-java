@@ -67,7 +67,10 @@ public class TentClientAsync {
    */
   public TentClientAsync(String entityUrl) {
     this.entityUrl = entityUrl;
-    this.httpClient = new AsyncHttpClient(new JDKAsyncHttpProvider(new AsyncHttpClientConfig.Builder().setRequestTimeoutInMs(10000).build()));
+    AsyncHttpClientConfig.Builder configBuilder = new AsyncHttpClientConfig.Builder()
+      .setFollowRedirects(true)
+      .setRequestTimeoutInMs(60000);
+    this.httpClient = new AsyncHttpClient(new JDKAsyncHttpProvider(configBuilder.build()));
   }
 
   /**
@@ -127,8 +130,10 @@ public class TentClientAsync {
         public Profile onCompleted(Response response) throws Exception {
           String responseBody = response.getResponseBody();
           LOGGER.debug(responseBody);
+          
+          profile = GSON.fromJson(responseBody, Profile.class);
 
-          return GSON.fromJson(responseBody, Profile.class);
+          return profile;
         }
       });
     } catch (Exception e) {
@@ -152,9 +157,9 @@ public class TentClientAsync {
     }
   }
 
-  public Future<Following> getFollowing(Following following) {
+  public Future<Following> getFollowing(String id) {
     try {
-      return httpClient.prepareGet(getServer() + "/followings/" + following.getId()).addHeader("Accept", TENT_MIME_TYPE)
+      return httpClient.prepareGet(getServer() + "/followings/" + id).addHeader("Accept", TENT_MIME_TYPE)
           .execute(new AsyncCompletionHandler<Following>() {
             @Override
             public Following onCompleted(Response response) throws Exception {
