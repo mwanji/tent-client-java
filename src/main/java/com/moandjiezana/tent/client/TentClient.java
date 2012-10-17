@@ -9,6 +9,7 @@ import com.moandjiezana.tent.client.users.Following;
 import com.moandjiezana.tent.client.users.Profile;
 import com.moandjiezana.tent.oauth.AccessToken;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Future;
@@ -29,6 +30,11 @@ public class TentClient {
   
   public TentClient(Profile profile) {
     tentClientAsync = new TentClientAsync(profile);
+    String[] servers = profile.getCore().getServers();
+    profileUrls = new ArrayList<String>();
+    for (String server : servers) {
+      profileUrls.add(server + "/profile");
+    }
   }
   
   /**
@@ -60,8 +66,8 @@ public class TentClient {
     return waitFor(tentClientAsync.getFollowings());
   }
   
-  public Following getFollowing(Following following) {
-    return waitFor(tentClientAsync.getFollowing(following));
+  public Following getFollowing(String id) {
+    return waitFor(tentClientAsync.getFollowing(id));
   }
   
   public List<Post> getPosts() {
