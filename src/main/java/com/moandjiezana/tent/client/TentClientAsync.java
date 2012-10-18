@@ -1,5 +1,6 @@
 package com.moandjiezana.tent.client;
 
+import com.google.common.base.Charsets;
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -48,6 +49,7 @@ import org.slf4j.LoggerFactory;
  */
 public class TentClientAsync {
   
+  private static final String UTF_8 = Charsets.UTF_8.toString();
   private static final RequestSigner REQUEST_SIGNER = new RequestSigner();
   private static final String TENT_REL_PROFILE = "https://tent.io/rels/profile";
   private static final Logger LOGGER = LoggerFactory.getLogger(TentClientAsync.class);
@@ -128,7 +130,7 @@ public class TentClientAsync {
 
         @Override
         public Profile onCompleted(Response response) throws Exception {
-          String responseBody = response.getResponseBody();
+          String responseBody = response.getResponseBody(UTF_8);
           LOGGER.debug(responseBody);
           
           profile = GSON.fromJson(responseBody, Profile.class);
@@ -146,7 +148,7 @@ public class TentClientAsync {
       return httpClient.prepareGet(getServer() + "/followings").addHeader("Accept", TENT_MIME_TYPE).execute(new AsyncCompletionHandler<List<Following>>() {
         @Override
         public List<Following> onCompleted(Response response) throws Exception {
-          String responseBody = response.getResponseBody();
+          String responseBody = response.getResponseBody(UTF_8);
           LOGGER.debug(responseBody);
 
           return GSON.fromJson(responseBody, new TypeToken<List<Following>>() {}.getType());
@@ -163,7 +165,7 @@ public class TentClientAsync {
           .execute(new AsyncCompletionHandler<Following>() {
             @Override
             public Following onCompleted(Response response) throws Exception {
-              String responseBody = response.getResponseBody();
+              String responseBody = response.getResponseBody(UTF_8);
               LOGGER.debug(responseBody);
 
               return GSON.fromJson(responseBody, Following.class);
@@ -202,7 +204,7 @@ public class TentClientAsync {
       return requestBuilder.execute(new AsyncCompletionHandler<List<Post>>() {
         @Override
         public List<Post> onCompleted(Response response) throws Exception {
-          String responseBody = response.getResponseBody();
+          String responseBody = response.getResponseBody(UTF_8);
           LOGGER.debug(responseBody);
 
           return GSON.fromJson(responseBody, new TypeToken<List<Post>>() {}.getType());
@@ -226,7 +228,7 @@ public class TentClientAsync {
       return requestBuilder.execute(new AsyncCompletionHandler<Post>() {
         @Override
         public Post onCompleted(Response response) throws Exception {
-          String responseBody = response.getResponseBody();
+          String responseBody = response.getResponseBody(UTF_8);
           LOGGER.debug(responseBody);
 
           return GSON.fromJson(responseBody, Post.class);
@@ -241,6 +243,7 @@ public class TentClientAsync {
     try {
       URL url = new URL(getServer() + "/posts");
       return httpClient.preparePost(getServer() + "/posts")
+          .setBodyEncoding(UTF_8)
           .addHeader("Content-Type", TENT_MIME_TYPE)
           .addHeader("Accept", TENT_MIME_TYPE)
           .addHeader("Authorization", REQUEST_SIGNER.generateAuthorizationHeader("POST", url, accessToken))
@@ -248,7 +251,7 @@ public class TentClientAsync {
           .execute(new AsyncCompletionHandler<Post>() {
             @Override
             public Post onCompleted(Response response) throws Exception {
-              String responseBody = response.getResponseBody();
+              String responseBody = response.getResponseBody(UTF_8);
               LOGGER.debug(response.getStatusCode() + " " + response.getStatusText());
               LOGGER.debug(responseBody);
               
@@ -266,7 +269,7 @@ public class TentClientAsync {
           .setBody(GSON.toJson(registrationRequest)).execute(new AsyncCompletionHandler<RegistrationResponse>() {
             @Override
             public RegistrationResponse onCompleted(Response response) throws Exception {
-              String responseBody = response.getResponseBody();
+              String responseBody = response.getResponseBody(UTF_8);
               LOGGER.debug(responseBody);
               RegistrationResponse registrationResponse = GSON.fromJson(responseBody, RegistrationResponse.class);
               setRegistrationResponse(registrationResponse);
@@ -315,7 +318,7 @@ public class TentClientAsync {
         .execute(new AsyncCompletionHandler<AccessToken>() {
           @Override
           public AccessToken onCompleted(Response response) throws Exception {
-            String responseBody = response.getResponseBody();
+            String responseBody = response.getResponseBody(UTF_8);
             
             LOGGER.debug("TentClientAsync.getAccessToken()");
             LOGGER.debug(Integer.toString(response.getStatusCode()));
@@ -362,7 +365,7 @@ public class TentClientAsync {
     }
 
     if (profileUrls.isEmpty()) {
-      Document document = Jsoup.parse(response.getResponseBody());
+      Document document = Jsoup.parse(response.getResponseBody(UTF_8));
 
       Elements elements = document.select("head link[rel=" + TENT_REL_PROFILE + "]");
 
