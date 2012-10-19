@@ -37,6 +37,10 @@ public class TentClient {
     }
   }
   
+  public TentClient(TentClientAsync tentClientAsync) {
+    this.tentClientAsync = tentClientAsync;
+  }
+  
   /**
    * Obtains the profile URLs for the given entity, first by HEAD, then by GET, if necessary.
    */

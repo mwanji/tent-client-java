@@ -63,26 +63,37 @@ public class TentClientAsync {
   private Profile profile;
   private AccessToken accessToken;
   private RegistrationResponse registrationResponse;
+  
+  public static AsyncHttpClientConfig.Builder getDefaultAsyncHttpClientConfigBuilder() {
+    return new AsyncHttpClientConfig.Builder()
+      .setFollowRedirects(true)
+      .setRequestTimeoutInMs(60000);
+  }
 
   /**
    * @param entityUrl An undiscovered entity.
    */
   public TentClientAsync(String entityUrl) {
-    this.entityUrl = entityUrl;
-    AsyncHttpClientConfig.Builder configBuilder = new AsyncHttpClientConfig.Builder()
-      .setFollowRedirects(true)
-      .setRequestTimeoutInMs(60000);
-    this.httpClient = new AsyncHttpClient(new JDKAsyncHttpProvider(configBuilder.build()));
+    this(entityUrl, new AsyncHttpClient(new JDKAsyncHttpProvider(getDefaultAsyncHttpClientConfigBuilder().build())));
   }
 
   /**
    * @param profile A previously-discovered entity.
    */
   public TentClientAsync(Profile profile) {
-    this(profile.getCore().getEntity());
-    this.profile = profile;
+    this(profile, new AsyncHttpClient(new JDKAsyncHttpProvider(getDefaultAsyncHttpClientConfigBuilder().build())));
+  }
+  
+  public TentClientAsync(String entityUrl, AsyncHttpClient httpClient) {
+    this.entityUrl = entityUrl;
+    this.httpClient = httpClient;
   }
 
+  public TentClientAsync(Profile profile, AsyncHttpClient httpClient) {
+    this(profile.getCore().getEntity(), httpClient);
+    this.profile = profile;
+  }
+  
   /**
    * Obtains the profile URLs for the given entity. All future method calls use
    * these URLs.
@@ -242,6 +253,7 @@ public class TentClientAsync {
   public Future<Post> write(Post post) {
     try {
       URL url = new URL(getServer() + "/posts");
+      LOGGER.debug("WRITE: " + GSON.toJson(post));
       return httpClient.preparePost(getServer() + "/posts")
           .setBodyEncoding(UTF_8)
           .addHeader("Content-Type", TENT_MIME_TYPE)
