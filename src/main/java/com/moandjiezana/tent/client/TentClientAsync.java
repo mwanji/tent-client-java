@@ -274,6 +274,24 @@ public class TentClientAsync {
       throw Throwables.propagate(e);
     }
   }
+  
+  public Future<Boolean> deletePost(String id) {
+    String urlString = getServer() + "/posts/" + id;
+    try {
+      return httpClient.prepareDelete(urlString)
+        .addHeader("Content-Type", TENT_MIME_TYPE)
+        .addHeader("Accept", TENT_MIME_TYPE)
+        .addHeader("Authorization", REQUEST_SIGNER.generateAuthorizationHeader("DELETE", new URL(urlString), accessToken))
+        .execute(new AsyncCompletionHandler<Boolean>() {
+          @Override
+          public Boolean onCompleted(Response response) throws Exception {
+            return response.getStatusCode() == 200;
+          }
+        });
+    } catch (Exception e) {
+      throw Throwables.propagate(Throwables.getRootCause(e));
+    }
+  }
 
   public Future<RegistrationResponse> register(RegistrationRequest registrationRequest) {
     try {

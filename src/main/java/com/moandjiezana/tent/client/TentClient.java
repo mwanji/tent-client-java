@@ -90,6 +90,10 @@ public class TentClient {
     return waitFor(tentClientAsync.write(post));
   }
   
+  public Boolean delete(Post post) {
+    return waitFor(tentClientAsync.deletePost(post.getId()));
+  }
+  
   public RegistrationResponse register(RegistrationRequest registrationRequest) {
     return waitFor(tentClientAsync.register(registrationRequest));
   }

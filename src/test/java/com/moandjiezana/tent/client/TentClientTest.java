@@ -3,6 +3,7 @@ package com.moandjiezana.tent.client;
 import static com.github.restdriver.clientdriver.RestClientDriver.giveEmptyResponse;
 import static com.github.restdriver.clientdriver.RestClientDriver.giveResponse;
 import static com.github.restdriver.clientdriver.RestClientDriver.onRequestTo;
+import static junit.framework.Assert.assertTrue;
 import static org.fest.assertions.Assertions.assertThat;
 
 import com.fasterxml.jackson.core.JsonGenerationException;
@@ -16,6 +17,7 @@ import com.moandjiezana.tent.client.internal.com.google.common.base.Joiner;
 import com.moandjiezana.tent.client.posts.Mention;
 import com.moandjiezana.tent.client.posts.Post;
 import com.moandjiezana.tent.client.posts.content.StatusContent;
+import com.moandjiezana.tent.client.users.Following;
 import com.moandjiezana.tent.client.users.Permissions;
 import com.moandjiezana.tent.client.users.Profile;
 import com.moandjiezana.tent.oauth.AccessToken;
@@ -51,6 +53,11 @@ public class TentClientTest {
     List<Post> posts = tentClient.getPosts();
     
     printPosts(posts);
+    
+    List<Following> followings = tentClient.getFollowings();
+    for (Following following : followings) {
+      System.out.println(following.getEntity() + ": " + following.getPermissions());
+    }
   }
   
   @Test @Ignore
@@ -147,6 +154,52 @@ public class TentClientTest {
   }
   
   @Test @Ignore
+  public void post_and_delete() throws Exception {
+    TentClient tentClient = new TentClient("https://javaapiclient.tent.is/");
+    tentClient.discover();
+    tentClient.getProfile();
+    
+    HashMap<String, String> scopes = new HashMap<String, String>();
+    scopes.put("write_posts", "Mostly test posts.");
+    
+    RegistrationRequest registrationRequest = new RegistrationRequest("TentClient for Java for deletion", "Running dev tests", "http://www.moandjiezana.com/tent-client-java", new String [] { "http://www.moandjiezana.com/tent-test/index.php" }, scopes);
+    RegistrationResponse registrationResponse = tentClient.register(registrationRequest);
+    
+    AuthorizationRequest authorizationRequest = new AuthorizationRequest(registrationResponse.getId(), "http://www.moandjiezana.com/tent-test/index.php");
+    authorizationRequest.setScope(Joiner.on(',').join(registrationRequest.getScopes().keySet()));
+    authorizationRequest.setState("myState");
+    authorizationRequest.setTentPostTypes(Post.Types.status("v0.1.0"));
+    authorizationRequest.setTentProfileInfoTypes(Profile.Core.URI, Profile.Basic.URI);
+    
+    String authorizationUrl = tentClient.getAsync().buildAuthorizationUrl(authorizationRequest);
+    System.out.println("Auth URL: " + authorizationUrl);
+    Desktop.getDesktop().browse(new URI(authorizationUrl));
+    
+    System.out.println("Code?");
+    BufferedReader bufferRead = new BufferedReader(new InputStreamReader(System.in));
+    String code = bufferRead.readLine();
+    
+    tentClient.getAsync().getAccessToken(code).get();
+    
+    Post post = new Post();
+    post.setPublishedAt(System.currentTimeMillis() / 1000);
+    Permissions permissions = new Permissions();
+    permissions.setPublic(true);
+    post.setPermissions(permissions);
+    post.setLicenses(new String[] { "http://creativecommons.org/licenses/by/3.0/" });
+    StatusContent statusContent = new StatusContent();
+    statusContent.setText("To be deleted");
+    post.setContent(statusContent);
+    
+    Post returnedPost = tentClient.write(post);
+    
+    System.out.println("post ID=" + returnedPost.getId());
+    System.out.println("content=" + returnedPost.getContentAs(StatusContent.class).getText());
+    
+    tentClient.getAsync().deletePost(returnedPost.getId());
+  }
+  
+  @Test @Ignore
   public void auth() throws Exception {
     TentClient tentClient = new TentClient("https://javaapiclient.tent.is/");
     tentClient.discover();
@@ -230,10 +283,7 @@ public class TentClientTest {
   
   @Test
   public void should_register_with_server() throws Exception {
-    Profile profile = new Profile();
-    Profile.Core core = new Profile.Core();
-    core.setServers(new String[] { server.getBaseUrl() });
-    profile.setCore(core);
+    Profile profile = profile();
     
     TentClientAsync tentClient = new TentClientAsync(profile);
     
@@ -244,10 +294,7 @@ public class TentClientTest {
   
   @Test
   public void get_posts_should_accept_null_query() throws Exception {
-    Profile profile = new Profile();
-    Profile.Core core = new Profile.Core();
-    core.setServers(new String[] { server.getBaseUrl() });
-    profile.setCore(core);
+    Profile profile = profile();
     
     TentClientAsync tentClient = new TentClientAsync(profile);
     
@@ -255,9 +302,32 @@ public class TentClientTest {
 
     tentClient.getPosts(null).get();
   }
+  
+  @Test
+  public void should_delete_post() throws Exception {
+    TentClient tentClient = new TentClient(profile());
+    AccessToken accessToken = new AccessToken();
+    accessToken.setMacKey("123");
+    tentClient.getAsync().setAccessToken(accessToken);
+    
+    Post post = new Post();
+    post.setId("abc");
+
+    server.addExpectation(onRequestTo("/posts/abc").withMethod(Method.DELETE), giveEmptyResponse().withStatus(200));
+    
+    assertTrue(tentClient.delete(post));
+  }
 
   private String profileUrl() {
     return server.getBaseUrl() + "/tent/profile";
+  }
+  
+  private Profile profile() {
+    Profile profile = new Profile();
+    Profile.Core core = new Profile.Core();
+    core.setServers(new String[] { server.getBaseUrl() });
+    profile.setCore(core);
+    return profile;
   }
   
   private String profileJson() {
