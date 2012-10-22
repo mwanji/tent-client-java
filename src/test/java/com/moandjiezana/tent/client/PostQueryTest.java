@@ -28,10 +28,17 @@ public class PostQueryTest {
   }
   
   @Test
-  public void should_combine_restrictions() {
-    PostQuery postQuery = new PostQuery().entity("https://www.example.com").postTypes("http://a.status.type", "http://b.status.type");
+  public void should_restrict_on_mentioned_post() throws Exception {
+    PostQuery postQuery = new PostQuery().mentionedPost("abc");
     
-    assertEquals("post_types=http://a.status.type,http://b.status.type&entity=https://www.example.com", postQuery.toString());
+    assertEquals("mentioned_post=abc", postQuery.toString());
+  }
+  
+  @Test
+  public void should_combine_restrictions() {
+    PostQuery postQuery = new PostQuery().entity("https://www.example.com").postTypes("http://a.status.type", "http://b.status.type").mentionedPost("ui6cx");
+    
+    assertEquals("post_types=http://a.status.type,http://b.status.type&entity=https://www.example.com&mentioned_post=ui6cx", postQuery.toString());
   }
   
   @Test @Ignore

@@ -13,6 +13,7 @@ public class PostQuery {
 
   private String[] postTypes;
   private String entity;
+  private String mentionedPost;
   
   public PostQuery postTypes(String... postTypes) {
     this.postTypes = postTypes;
@@ -22,6 +23,12 @@ public class PostQuery {
   
   public PostQuery entity(String entity) {
     this.entity = entity;
+    
+    return this;
+  }
+
+  public PostQuery mentionedPost(String postId) {
+    this.mentionedPost = postId;
     
     return this;
   }
@@ -35,6 +42,10 @@ public class PostQuery {
     
     if (entity != null) {
       map.put("entity", new String[] { entity });
+    }
+    
+    if (!Strings.isNullOrEmpty(mentionedPost)) {
+      map.put("mentioned_post", new String[] { mentionedPost });
     }
     
     return map;
@@ -52,7 +63,9 @@ public class PostQuery {
     
     String entityQuery = !Strings.isNullOrEmpty(entity) ? "entity=" + entity : null;
     
-    return AMPERSANDS.join(postTypesQuery, entityQuery);
+    String mentionedPostQuery = !Strings.isNullOrEmpty(mentionedPost) ? "mentioned_post=" + mentionedPost : null;
+    
+    return AMPERSANDS.join(postTypesQuery, entityQuery, mentionedPostQuery);
   }
 
   public String[] getPostTypes() {
