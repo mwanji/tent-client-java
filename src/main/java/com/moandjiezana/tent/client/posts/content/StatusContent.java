@@ -9,6 +9,18 @@ public class StatusContent implements PostContent {
   private String text;
   private GeoJsonPoint location;
   
+  public StatusContent() {
+  }
+
+  public StatusContent(String text) {
+    this.text = text;
+  }
+
+  public StatusContent(String text, GeoJsonPoint location) {
+    this.text = text;
+    this.location = location;
+  }
+
   @Override
   public String getType() {
     return URI;
