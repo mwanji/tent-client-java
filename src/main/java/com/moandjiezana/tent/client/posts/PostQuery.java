@@ -1,6 +1,5 @@
 package com.moandjiezana.tent.client.posts;
 
-import com.google.common.base.Strings;
 import com.moandjiezana.tent.client.internal.com.google.common.base.Joiner;
 
 import java.util.HashMap;
@@ -44,7 +43,7 @@ public class PostQuery {
       map.put("entity", new String[] { entity });
     }
     
-    if (!Strings.isNullOrEmpty(mentionedPost)) {
+    if (mentionedPost != null) {
       map.put("mentioned_post", new String[] { mentionedPost });
     }
     
@@ -61,14 +60,18 @@ public class PostQuery {
       postTypesQuery = "post_types=" + COMMAS.join(postTypes);
     }
     
-    String entityQuery = !Strings.isNullOrEmpty(entity) ? "entity=" + entity : null;
+    String entityQuery = isNotEmpty(entity) ? "entity=" + entity : null;
     
-    String mentionedPostQuery = !Strings.isNullOrEmpty(mentionedPost) ? "mentioned_post=" + mentionedPost : null;
+    String mentionedPostQuery = isNotEmpty(mentionedPost) ? "mentioned_post=" + mentionedPost : null;
     
     return AMPERSANDS.join(postTypesQuery, entityQuery, mentionedPostQuery);
   }
 
   public String[] getPostTypes() {
     return postTypes;
+  }
+  
+  private boolean isNotEmpty(String s) {
+    return s != null && !s.isEmpty();
   }
 }
