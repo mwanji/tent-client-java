@@ -36,7 +36,7 @@ public class Post {
 
   private String id;
   private String entity;
-  private long publishedAt;
+  private long publishedAt = System.currentTimeMillis() / 1000;
   private long receivedAt;
   private long updatedAt;
   private Mention[] mentions;

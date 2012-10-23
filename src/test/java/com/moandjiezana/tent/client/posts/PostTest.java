@@ -31,4 +31,11 @@ public class PostTest {
     
     assertEquals("my text", post.getContentAs(StatusContent.class).getText());
   }
+  
+  @Test
+  public void should_have_default_publication_date() {
+    Post post = new Post();
+    
+    assertEquals(System.currentTimeMillis() / 1000, post.getPublishedAt());
+  }
 }
