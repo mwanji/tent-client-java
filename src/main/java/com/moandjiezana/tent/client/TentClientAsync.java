@@ -48,13 +48,14 @@ import org.slf4j.LoggerFactory;
  * at a time.
  */
 public class TentClientAsync {
-  
+
   private static final String UTF_8 = Charsets.UTF_8.toString();
   private static final RequestSigner REQUEST_SIGNER = new RequestSigner();
   private static final String TENT_REL_PROFILE = "https://tent.io/rels/profile";
   private static final Logger LOGGER = LoggerFactory.getLogger(TentClientAsync.class);
   private static final String TENT_MIME_TYPE = "application/vnd.tent.v0+json";
   private static final Gson GSON = new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).registerTypeAdapter(Profile.class, new ProfileTypeAdapter()).create();
+  private static AsyncHttpClient defaultAsyncHttpClient = new AsyncHttpClient(new JDKAsyncHttpProvider(getDefaultAsyncHttpClientConfigBuilder().build()));
 
   private final AsyncHttpClient httpClient;
 
@@ -70,18 +71,22 @@ public class TentClientAsync {
       .setRequestTimeoutInMs(60000);
   }
 
+  public static void setDefaultAsyncHttpClient(AsyncHttpClient asyncHttpClient) {
+    defaultAsyncHttpClient = asyncHttpClient;
+  }
+  
   /**
    * @param entityUrl An undiscovered entity.
    */
   public TentClientAsync(String entityUrl) {
-    this(entityUrl, new AsyncHttpClient(new JDKAsyncHttpProvider(getDefaultAsyncHttpClientConfigBuilder().build())));
+    this(entityUrl, defaultAsyncHttpClient);
   }
 
   /**
    * @param profile A previously-discovered entity.
    */
   public TentClientAsync(Profile profile) {
-    this(profile, new AsyncHttpClient(new JDKAsyncHttpProvider(getDefaultAsyncHttpClientConfigBuilder().build())));
+    this(profile, defaultAsyncHttpClient);
   }
   
   public TentClientAsync(String entityUrl, AsyncHttpClient httpClient) {
