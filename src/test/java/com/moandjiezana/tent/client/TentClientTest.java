@@ -153,7 +153,7 @@ public class TentClientTest {
     System.out.println("content=" + returnedPost.getContentAs(StatusContent.class).getText());
   }
   
-  @Test
+  @Test @Ignore
   public void post_update_and_delete() throws Exception {
     TentClient tentClient = new TentClient("http://localhost:3000/");
     tentClient.discover();
