@@ -37,7 +37,6 @@ public class RequestSigner {
         .append("").append("\n"); // empty ext field;
 
       String sigBase = sb.toString();
-      System.out.println("string to sign=" + sigBase);
       String mac = generateMac(sigBase, accessToken.getMacKey());
 
       String macFormat = "MAC id=\"%s\", ts=\"%s\", nonce=\"%s\", mac=\"%s\"";

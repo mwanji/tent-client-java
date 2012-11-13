@@ -7,7 +7,14 @@ public class Repost implements PostContent {
   
   private String entity;
   private String id;
+
+  public Repost(String entity, String id) {
+    this.entity = entity;
+    this.id = id;
+  }
   
+  public Repost() {}
+
   @Override
   public String getType() {
     return URI;

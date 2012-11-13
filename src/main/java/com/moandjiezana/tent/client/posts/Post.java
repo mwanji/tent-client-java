@@ -1,10 +1,10 @@
 package com.moandjiezana.tent.client.posts;
 
 import com.google.gson.Gson;
-import com.google.gson.annotations.Expose;
 import com.google.gson.reflect.TypeToken;
 import com.moandjiezana.tent.client.posts.content.PostContent;
 import com.moandjiezana.tent.client.users.Permissions;
+import com.moandjiezana.tent.json.ExcludeFromJson;
 
 import java.util.Map;
 
@@ -30,6 +30,10 @@ public class Post {
     public static String photo(String version) {
       return "https://tent.io/types/post/photo/" + version;
     }
+    
+    public static boolean equalsIgnoreVersion(String type1, String type2) {
+      return type1.substring(0, type1.lastIndexOf('/')).equals(type2.substring(0, type2.lastIndexOf('/')));
+    }
   }
   
   private static final Gson gson = new Gson();
@@ -43,7 +47,7 @@ public class Post {
   private String[] licenses;
   private String type;
   private Map<String, Object> content;
-  @Expose(serialize = false, deserialize = false)
+  @ExcludeFromJson
   private PostContent postContent;
   private Attachment[] attachments;
   private App app;

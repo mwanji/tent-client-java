@@ -1,6 +1,8 @@
 package com.moandjiezana.tent.client.posts;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import com.google.gson.Gson;
 import com.moandjiezana.tent.client.posts.content.PostContent;
@@ -37,5 +39,15 @@ public class PostTest {
     Post post = new Post();
     
     assertEquals(System.currentTimeMillis() / 1000, post.getPublishedAt());
+  }
+  
+  @Test
+  public void should_match_different_versions() {
+    assertTrue(Post.Types.equalsIgnoreVersion(Post.Types.essay("v0.1.0"), Post.Types.essay("v0.2.0")));
+  }
+  
+  @Test
+  public void should_not_match_different_types() {
+    assertFalse(Post.Types.equalsIgnoreVersion(Post.Types.essay("v0.1.0"), Post.Types.photo("v0.1.0")));
   }
 }

@@ -15,21 +15,21 @@ import java.util.List;
 import java.util.concurrent.Future;
 
 /**
- * A blocking, higher-level wrapper around {@link TentClientAsync}
+ * A blocking, higher-level wrapper around {@link HttpTentDataSource}
  */
 public class TentClient {
-  private final TentClientAsync tentClientAsync;
+  private final TentDataSource tentClientAsync;
   private List<String> profileUrls = Collections.<String>emptyList();
   
   /**
    * Use the default constructor only to discover an entity.
    */
   public TentClient(String entityUrl) {
-    tentClientAsync = new TentClientAsync(entityUrl);
+    tentClientAsync = new HttpTentDataSource(entityUrl);
   }
   
   public TentClient(Profile profile) {
-    tentClientAsync = new TentClientAsync(profile);
+    tentClientAsync = new HttpTentDataSource(profile);
     String[] servers = profile.getCore().getServers();
     profileUrls = new ArrayList<String>();
     for (String server : servers) {
@@ -37,7 +37,7 @@ public class TentClient {
     }
   }
   
-  public TentClient(TentClientAsync tentClientAsync) {
+  public TentClient(TentDataSource tentClientAsync) {
     this.tentClientAsync = tentClientAsync;
   }
   
@@ -89,6 +89,10 @@ public class TentClient {
   public Post write(Post post) {
     return waitFor(tentClientAsync.write(post));
   }
+
+  public Post put(Post post) {
+    return waitFor(tentClientAsync.put(post));
+  }
   
   public Boolean delete(Post post) {
     return waitFor(tentClientAsync.deletePost(post.getId()));
@@ -106,7 +110,7 @@ public class TentClient {
     return waitFor(tentClientAsync.getAccessToken(code));
   }
   
-  public TentClientAsync getAsync() {
+  public TentDataSource getAsync() {
     return tentClientAsync;
   }
   

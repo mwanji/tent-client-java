@@ -124,7 +124,7 @@ public class TentClientTest {
   public void post_as_java_client() throws JsonGenerationException, JsonMappingException, IOException, IllegalArgumentException, InterruptedException, ExecutionException {
     long time = System.currentTimeMillis() / 1000;
     
-    TentClientAsync tentClient = new TentClientAsync("https://javaapiclient.tent.is");
+    TentDataSource tentClient = new HttpTentDataSource("https://javaapiclient.tent.is");
     tentClient.discover("HEAD").get();
     tentClient.getProfile().get();
     
@@ -153,9 +153,9 @@ public class TentClientTest {
     System.out.println("content=" + returnedPost.getContentAs(StatusContent.class).getText());
   }
   
-  @Test @Ignore
-  public void post_and_delete() throws Exception {
-    TentClient tentClient = new TentClient("https://javaapiclient.tent.is/");
+  @Test
+  public void post_update_and_delete() throws Exception {
+    TentClient tentClient = new TentClient("http://localhost:3000/");
     tentClient.discover();
     tentClient.getProfile();
     
@@ -188,7 +188,7 @@ public class TentClientTest {
     post.setPermissions(permissions);
     post.setLicenses(new String[] { "http://creativecommons.org/licenses/by/3.0/" });
     StatusContent statusContent = new StatusContent();
-    statusContent.setText("To be deleted");
+    statusContent.setText("To be updated");
     post.setContent(statusContent);
     
     Post returnedPost = tentClient.write(post);
@@ -196,7 +196,12 @@ public class TentClientTest {
     System.out.println("post ID=" + returnedPost.getId());
     System.out.println("content=" + returnedPost.getContentAs(StatusContent.class).getText());
     
-    tentClient.getAsync().deletePost(returnedPost.getId());
+    StatusContent status2 = returnedPost.getContentAs(StatusContent.class);
+    status2.setText("Has been updated!");
+    returnedPost.setContent(status2);
+    Post updatedPost = tentClient.put(returnedPost);
+    
+//    tentClient.getAsync().deletePost(updatedPost.getId());
   }
   
   @Test @Ignore
@@ -285,7 +290,7 @@ public class TentClientTest {
   public void should_register_with_server() throws Exception {
     Profile profile = profile();
     
-    TentClientAsync tentClient = new TentClientAsync(profile);
+    TentDataSource tentClient = new HttpTentDataSource(profile);
     
     server.addExpectation(onRequestTo("/apps").withMethod(Method.POST), giveResponse("{\"name\": \"FooApp\",\"description\": \"Does amazing foos with your data\",\"url\": \"http://example.com\",\n\"icon\": \"http://example.com/icon.png\",\"redirect_uris\": [\"https://app.example.com/tent/callback\"],\"scopes\": {\"write_profile\": \"Uses an app profile section to describe foos\",\"read_followings\": \"Calculates foos based on your followings\"},\"id\": \"fbh9mv\",\"mac_key_id\": \"a:960fedee\",\"mac_key\": \"f7ef29fd0b7ec539f3f7f404aee0a866\",\"mac_algorithm\": \"hmac-sha-256\",\"authorizations\": []}"));
     
@@ -296,7 +301,7 @@ public class TentClientTest {
   public void get_posts_should_accept_null_query() throws Exception {
     Profile profile = profile();
     
-    TentClientAsync tentClient = new TentClientAsync(profile);
+    TentDataSource tentClient = new HttpTentDataSource(profile);
     
     server.addExpectation(onRequestTo("/posts"), giveEmptyResponse());
 
@@ -334,8 +339,8 @@ public class TentClientTest {
     return "{\"https://tent.io/types/info/basic/v0.1.0\":{\"name\":\"Mwanji Ezana\",\"avatar_url\":\"http://www.gravatar.com/avatar/ae8715093d8d4219507146ed34f0ed16.png\",\"birthdate\":\"\",\"location\":\"\",\"gender\":\"M\",\"bio\":\"\",\"permissions\":{\"public\":true}},\"https://tent.io/types/info/core/v0.1.0\":{\"entity\":\"" + server.getBaseUrl() + "\",\"licenses\":[],\"servers\":[\"https://mwanji.tent.is/tent\"],\"permissions\":{\"public\":true}}}";
   }
   
-  private TentClientAsync tentClient() {
-    return new TentClientAsync(server.getBaseUrl());
+  private TentDataSource tentClient() {
+    return new HttpTentDataSource(server.getBaseUrl());
   }
 
   private void printPosts(List<Post> posts) {

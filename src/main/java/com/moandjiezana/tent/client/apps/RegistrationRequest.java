@@ -2,12 +2,20 @@ package com.moandjiezana.tent.client.apps;
 
 import java.util.Map;
 
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
+
 public class RegistrationRequest {
 
+  @NotNull @Size(min = 1)
   private final String name;
+  @NotNull @Size(min = 1)
   private final String description;
+  @NotNull @Size(min = 1)
   private final String url;
+  @NotNull @Size(min = 1)
   private final String[] redirectUris;
+  @NotNull
   private final Map<String, String> scopes;
   private String icon;
 

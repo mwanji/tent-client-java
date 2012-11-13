@@ -2,9 +2,8 @@ package com.moandjiezana.tent.client.apps;
 
 import com.moandjiezana.tent.client.internal.com.google.common.base.Joiner;
 
-
-
 public class AuthorizationRequest {
+  private static final String[] EMPTY_STRING_ARRAY = new String[0];
 
   private static final Joiner JOINER = Joiner.on(',').skipNulls();
 
@@ -13,10 +12,10 @@ public class AuthorizationRequest {
   private final String redirectUri;
   
   private String state;
-  private String scope;
-  private String tentProfileInfoTypes;
-  private String tentPostTypes;
   private String tentNotificationUrl;
+  private String[] scopes = EMPTY_STRING_ARRAY;
+  private String[] tentProfileInfoTypes = EMPTY_STRING_ARRAY;
+  private String[] tentPostTypes = EMPTY_STRING_ARRAY;
 
   public AuthorizationRequest(String clientId, String redirectUri) {
     this.clientId = clientId;
@@ -40,34 +39,34 @@ public class AuthorizationRequest {
   }
 
   public String getScope() {
-    return scope;
+    return JOINER.join(scopes);
   }
 
   public void setScope(String... scopes) {
-    this.scope = JOINER.join(scopes);
+    this.scopes = scopes;
   }
 
   public String getTentProfileInfoTypes() {
-    return tentProfileInfoTypes;
+    return JOINER.join(tentProfileInfoTypes);
   }
 
   public void setTentProfileInfoTypes(String... tentProfileInfoTypes) {
-    this.tentProfileInfoTypes = JOINER.join(tentProfileInfoTypes);
+    this.tentProfileInfoTypes = tentProfileInfoTypes;
   }
 
   public String getTentPostTypes() {
-    return tentPostTypes;
+    return JOINER.join(tentPostTypes);
   }
 
   public void setTentPostTypes(String... tentPostTypes) {
-    this.tentPostTypes = JOINER.join(tentPostTypes);
+    this.tentPostTypes = tentPostTypes;
   }
 
   public String getTentNotificationUrl() {
     return tentNotificationUrl;
   }
 
-  public void setTentNotificationUrl(String... tentNotificationUrl) {
-    this.tentNotificationUrl = JOINER.join(tentNotificationUrl);
+  public void setTentNotificationUrl(String tentNotificationUrl) {
+    this.tentNotificationUrl = tentNotificationUrl;
   }
 }

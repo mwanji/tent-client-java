@@ -14,6 +14,7 @@ import com.moandjiezana.tent.client.posts.PostQuery;
 import com.moandjiezana.tent.client.users.Following;
 import com.moandjiezana.tent.client.users.Profile;
 import com.moandjiezana.tent.json.ProfileTypeAdapter;
+import com.moandjiezana.tent.json.TentGsonExclusionStrategy;
 import com.moandjiezana.tent.oauth.AccessToken;
 import com.moandjiezana.tent.oauth.RequestSigner;
 import com.ning.http.client.AsyncCompletionHandler;
@@ -47,14 +48,14 @@ import org.slf4j.LoggerFactory;
  * As this class is stateful, each instance should only be used for one entity
  * at a time.
  */
-public class TentClientAsync {
+public class HttpTentDataSource implements TentDataSource {
 
   private static final String UTF_8 = Charsets.UTF_8.toString();
   private static final RequestSigner REQUEST_SIGNER = new RequestSigner();
   private static final String TENT_REL_PROFILE = "https://tent.io/rels/profile";
-  private static final Logger LOGGER = LoggerFactory.getLogger(TentClientAsync.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(HttpTentDataSource.class);
   private static final String TENT_MIME_TYPE = "application/vnd.tent.v0+json";
-  private static final Gson GSON = new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).registerTypeAdapter(Profile.class, new ProfileTypeAdapter()).create();
+  private static final Gson GSON = new GsonBuilder().setExclusionStrategies(new TentGsonExclusionStrategy()).setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).registerTypeAdapter(Profile.class, new ProfileTypeAdapter()).create();
   private static AsyncHttpClient defaultAsyncHttpClient = new AsyncHttpClient(new JDKAsyncHttpProvider(getDefaultAsyncHttpClientConfigBuilder().build()));
 
   private final AsyncHttpClient httpClient;
@@ -78,36 +79,31 @@ public class TentClientAsync {
   /**
    * @param entityUrl An undiscovered entity.
    */
-  public TentClientAsync(String entityUrl) {
+  public HttpTentDataSource(String entityUrl) {
     this(entityUrl, defaultAsyncHttpClient);
   }
 
   /**
    * @param profile A previously-discovered entity.
    */
-  public TentClientAsync(Profile profile) {
+  public HttpTentDataSource(Profile profile) {
     this(profile, defaultAsyncHttpClient);
   }
   
-  public TentClientAsync(String entityUrl, AsyncHttpClient httpClient) {
+  public HttpTentDataSource(String entityUrl, AsyncHttpClient httpClient) {
     this.entityUrl = entityUrl;
     this.httpClient = httpClient;
   }
 
-  public TentClientAsync(Profile profile, AsyncHttpClient httpClient) {
+  public HttpTentDataSource(Profile profile, AsyncHttpClient httpClient) {
     this(profile.getCore().getEntity(), httpClient);
     this.profile = profile;
   }
   
-  /**
-   * Obtains the profile URLs for the given entity. All future method calls use
-   * these URLs.
-   * 
-   * @param method
-   *          can be HEAD or GET.
-   * @return profile URLs, for convenience, as they are also stored internally.
-   *         Empty if no profile URLs found.
+  /* (non-Javadoc)
+   * @see com.moandjiezana.tent.client.TentDataSource#discover(java.lang.String)
    */
+  @Override
   public Future<List<String>> discover(String method) {
     profile = null;
     profileUrls = null;
@@ -131,18 +127,25 @@ public class TentClientAsync {
     }
   }
 
-  /**
-   * Sets the API roots if necessary.
-   * 
-   * @return
+  /* (non-Javadoc)
+   * @see com.moandjiezana.tent.client.TentDataSource#getProfile()
    */
+  @Override
   public Future<Profile> getProfile() {
-    if (profile != null) {
+    return getProfile(false);
+  }
+  
+  /* (non-Javadoc)
+   * @see com.moandjiezana.tent.client.TentDataSource#getProfile(boolean)
+   */
+  @Override
+  public Future<Profile> getProfile(boolean force) {
+    if (!force && profile != null) {
       return immediateFuture();
     }
     
     try {
-      return httpClient.prepareGet(profileUrls.get(0)).addHeader("Accept", TENT_MIME_TYPE).execute(new AsyncCompletionHandler<Profile>() {
+      return httpClient.prepareGet(profileUrls.get(0)).addHeader("Accept", TENT_MIME_TYPE).addHeader("Content-Type", TENT_MIME_TYPE).execute(new AsyncCompletionHandler<Profile>() {
 
         @Override
         public Profile onCompleted(Response response) throws Exception {
@@ -159,6 +162,10 @@ public class TentClientAsync {
     }
   }
   
+  /* (non-Javadoc)
+   * @see com.moandjiezana.tent.client.TentDataSource#getFollowings()
+   */
+  @Override
   public Future<List<Following>> getFollowings() {
     try {
       return httpClient.prepareGet(getServer() + "/followings").addHeader("Accept", TENT_MIME_TYPE).execute(new AsyncCompletionHandler<List<Following>>() {
@@ -175,6 +182,10 @@ public class TentClientAsync {
     }
   }
 
+  /* (non-Javadoc)
+   * @see com.moandjiezana.tent.client.TentDataSource#getFollowing(java.lang.String)
+   */
+  @Override
   public Future<Following> getFollowing(String id) {
     try {
       return httpClient.prepareGet(getServer() + "/followings/" + id).addHeader("Accept", TENT_MIME_TYPE)
@@ -192,10 +203,18 @@ public class TentClientAsync {
     }
   }
 
+  /* (non-Javadoc)
+   * @see com.moandjiezana.tent.client.TentDataSource#getPosts()
+   */
+  @Override
   public Future<List<Post>> getPosts() {
     return getPosts(null);
   }
 
+  /* (non-Javadoc)
+   * @see com.moandjiezana.tent.client.TentDataSource#getPosts(com.moandjiezana.tent.client.posts.PostQuery)
+   */
+  @Override
   public Future<List<Post>> getPosts(PostQuery query) {
     try {
       String urlString = getServer() + "/posts";
@@ -223,6 +242,10 @@ public class TentClientAsync {
           String responseBody = response.getResponseBody(UTF_8);
           LOGGER.debug(responseBody);
 
+          if (response.getStatusCode() != 200) {
+            return null;
+          }
+          
           return GSON.fromJson(responseBody, new TypeToken<List<Post>>() {}.getType());
         }
       });
@@ -231,6 +254,10 @@ public class TentClientAsync {
     }
   }
 
+  /* (non-Javadoc)
+   * @see com.moandjiezana.tent.client.TentDataSource#getPost(java.lang.String)
+   */
+  @Override
   public Future<Post> getPost(String id) {
     try {
       String urlString = getServer() + "/posts/" + id;
@@ -255,6 +282,10 @@ public class TentClientAsync {
     }
   }
 
+  /* (non-Javadoc)
+   * @see com.moandjiezana.tent.client.TentDataSource#write(com.moandjiezana.tent.client.posts.Post)
+   */
+  @Override
   public Future<Post> write(Post post) {
     try {
       URL url = new URL(getServer() + "/posts");
@@ -280,6 +311,33 @@ public class TentClientAsync {
     }
   }
   
+  @Override
+  public Future<Post> put(Post post) {
+    String urlString = getServer() + "/posts/" + post.getId();
+    try {
+      return httpClient.preparePut(urlString).addHeader("Content-Type", TENT_MIME_TYPE)
+        .addHeader("Accept", TENT_MIME_TYPE)
+        .addHeader("Authorization", REQUEST_SIGNER.generateAuthorizationHeader("PUT", new URL(urlString), accessToken))
+        .setBody(GSON.toJson(post))
+        .execute(new AsyncCompletionHandler<Post>() {
+          @Override
+          public Post onCompleted(Response response) throws Exception {
+            String responseBody = response.getResponseBody();
+            LOGGER.debug(responseBody);
+            
+            
+            return GSON.fromJson(responseBody, Post.class);
+          }
+        });
+    } catch (Exception e) {
+      throw Throwables.propagate(Throwables.getRootCause(e));
+    }
+  }
+  
+  /* (non-Javadoc)
+   * @see com.moandjiezana.tent.client.TentDataSource#deletePost(java.lang.String)
+   */
+  @Override
   public Future<Boolean> deletePost(String id) {
     String urlString = getServer() + "/posts/" + id;
     try {
@@ -298,6 +356,10 @@ public class TentClientAsync {
     }
   }
 
+  /* (non-Javadoc)
+   * @see com.moandjiezana.tent.client.TentDataSource#register(com.moandjiezana.tent.client.apps.RegistrationRequest)
+   */
+  @Override
   public Future<RegistrationResponse> register(RegistrationRequest registrationRequest) {
     try {
       return httpClient.preparePost(getServer() + "/apps").addHeader("Content-Type", TENT_MIME_TYPE).addHeader("Accept", TENT_MIME_TYPE)
@@ -317,9 +379,10 @@ public class TentClientAsync {
     }
   }
 
-  /**
-   * @return An absolute URL that the user can be redirected to to authorise the app.
+  /* (non-Javadoc)
+   * @see com.moandjiezana.tent.client.TentDataSource#buildAuthorizationUrl(com.moandjiezana.tent.client.apps.AuthorizationRequest)
    */
+  @Override
   public String buildAuthorizationUrl(AuthorizationRequest authorizationRequest) {
     return httpClient.prepareGet(getServer() + "/oauth/authorize").addQueryParameter("client_id", registrationResponse.getId())
         .addQueryParameter("redirect_uri", authorizationRequest.getRedirectUri()).addQueryParameter("state", authorizationRequest.getState())
@@ -329,6 +392,10 @@ public class TentClientAsync {
         .addQueryParameter("tent_notification_url", authorizationRequest.getTentNotificationUrl()).build().getUrl();
   }
   
+  /* (non-Javadoc)
+   * @see com.moandjiezana.tent.client.TentDataSource#getAccessToken(java.lang.String)
+   */
+  @Override
   public Future<AccessToken> getAccessToken(String code) {
     String uri = "/apps/" + registrationResponse.getId() + "/authorizations";
     String urlString = getServer() + uri;
@@ -369,10 +436,18 @@ public class TentClientAsync {
     }
   }
   
+  /* (non-Javadoc)
+   * @see com.moandjiezana.tent.client.TentDataSource#setAccessToken(com.moandjiezana.tent.oauth.AccessToken)
+   */
+  @Override
   public void setAccessToken(AccessToken accessToken) {
     this.accessToken = accessToken;
   }
 
+  /* (non-Javadoc)
+   * @see com.moandjiezana.tent.client.TentDataSource#setRegistrationResponse(com.moandjiezana.tent.client.apps.RegistrationResponse)
+   */
+  @Override
   public void setRegistrationResponse(RegistrationResponse registration) {
     this.registrationResponse = registration;
   }
