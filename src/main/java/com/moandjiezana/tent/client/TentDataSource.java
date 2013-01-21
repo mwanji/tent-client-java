@@ -1,5 +1,6 @@
 package com.moandjiezana.tent.client;
 
+import com.moandjiezana.tent.client.apps.App;
 import com.moandjiezana.tent.client.apps.AuthorizationRequest;
 import com.moandjiezana.tent.client.apps.RegistrationRequest;
 import com.moandjiezana.tent.client.apps.RegistrationResponse;
@@ -17,7 +18,7 @@ public interface TentDataSource {
   /**
    * Obtains the profile URLs for the given entity. All future method calls use
    * these URLs.
-   * 
+   *
    * @param method
    *          can be HEAD or GET.
    * @return profile URLs, for convenience, as they are also stored internally.
@@ -27,7 +28,7 @@ public interface TentDataSource {
 
   /**
    * Sets the API roots if necessary.
-   * 
+   *
    * @return
    */
   Future<Profile> getProfile();
@@ -62,5 +63,7 @@ public interface TentDataSource {
   void setRegistrationResponse(RegistrationResponse registration);
 
   Future<Post> put(Post post);
+
+  Future<App> getApp();
 
 }

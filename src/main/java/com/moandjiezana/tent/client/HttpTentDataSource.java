@@ -5,6 +5,7 @@ import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
+import com.moandjiezana.tent.client.apps.App;
 import com.moandjiezana.tent.client.apps.AuthorizationRequest;
 import com.moandjiezana.tent.client.apps.RegistrationRequest;
 import com.moandjiezana.tent.client.apps.RegistrationResponse;
@@ -65,7 +66,7 @@ public class HttpTentDataSource implements TentDataSource {
   private Profile profile;
   private AccessToken accessToken;
   private RegistrationResponse registrationResponse;
-  
+
   public static AsyncHttpClientConfig.Builder getDefaultAsyncHttpClientConfigBuilder() {
     return new AsyncHttpClientConfig.Builder()
       .setFollowRedirects(true)
@@ -75,7 +76,7 @@ public class HttpTentDataSource implements TentDataSource {
   public static void setDefaultAsyncHttpClient(AsyncHttpClient asyncHttpClient) {
     defaultAsyncHttpClient = asyncHttpClient;
   }
-  
+
   /**
    * @param entityUrl An undiscovered entity.
    */
@@ -89,7 +90,7 @@ public class HttpTentDataSource implements TentDataSource {
   public HttpTentDataSource(Profile profile) {
     this(profile, defaultAsyncHttpClient);
   }
-  
+
   public HttpTentDataSource(String entityUrl, AsyncHttpClient httpClient) {
     this.entityUrl = entityUrl;
     this.httpClient = httpClient;
@@ -99,7 +100,7 @@ public class HttpTentDataSource implements TentDataSource {
     this(profile.getCore().getEntity(), httpClient);
     this.profile = profile;
   }
-  
+
   /* (non-Javadoc)
    * @see com.moandjiezana.tent.client.TentDataSource#discover(java.lang.String)
    */
@@ -115,7 +116,7 @@ public class HttpTentDataSource implements TentDataSource {
         public List<String> onCompleted(Response response) throws Exception {
           if (response.getStatusCode() == 200 || response.getStatusCode() == 204) {
             addProfileUrls(response);
-            
+
             return profileUrls;
           } else {
             return Collections.emptyList();
@@ -134,7 +135,7 @@ public class HttpTentDataSource implements TentDataSource {
   public Future<Profile> getProfile() {
     return getProfile(false);
   }
-  
+
   /* (non-Javadoc)
    * @see com.moandjiezana.tent.client.TentDataSource#getProfile(boolean)
    */
@@ -143,7 +144,7 @@ public class HttpTentDataSource implements TentDataSource {
     if (!force && profile != null) {
       return immediateFuture();
     }
-    
+
     try {
       return httpClient.prepareGet(profileUrls.get(0)).addHeader("Accept", TENT_MIME_TYPE).addHeader("Content-Type", TENT_MIME_TYPE).execute(new AsyncCompletionHandler<Profile>() {
 
@@ -151,7 +152,7 @@ public class HttpTentDataSource implements TentDataSource {
         public Profile onCompleted(Response response) throws Exception {
           String responseBody = response.getResponseBody(UTF_8);
           LOGGER.debug(responseBody);
-          
+
           profile = GSON.fromJson(responseBody, Profile.class);
 
           return profile;
@@ -161,7 +162,7 @@ public class HttpTentDataSource implements TentDataSource {
       throw new RuntimeException(e);
     }
   }
-  
+
   /* (non-Javadoc)
    * @see com.moandjiezana.tent.client.TentDataSource#getFollowings()
    */
@@ -219,20 +220,20 @@ public class HttpTentDataSource implements TentDataSource {
     try {
       String urlString = getServer() + "/posts";
       URL url = new URL(urlString);
-      
+
       BoundRequestBuilder requestBuilder = httpClient.prepareGet(urlString).addHeader("Accept", TENT_MIME_TYPE);
-      
+
       if (query != null) {
         FluentStringsMap queryStringParameters = new FluentStringsMap();
-        
+
         for (Entry<String, String[]> entry : query.toMap().entrySet()) {
           queryStringParameters.add(entry.getKey(), entry.getValue());
         }
-        
+
         requestBuilder.setQueryParameters(queryStringParameters);
         url = new URL(urlString + "?" + query);
       }
-      
+
       if (isAuthorized()) {
         requestBuilder.addHeader("Authorization", REQUEST_SIGNER.generateAuthorizationHeader("GET", url, accessToken));
       }
@@ -245,7 +246,7 @@ public class HttpTentDataSource implements TentDataSource {
           if (response.getStatusCode() != 200) {
             return null;
           }
-          
+
           return GSON.fromJson(responseBody, new TypeToken<List<Post>>() {}.getType());
         }
       });
@@ -262,12 +263,12 @@ public class HttpTentDataSource implements TentDataSource {
     try {
       String urlString = getServer() + "/posts/" + id;
       URL url = new URL(urlString);
-      
+
       BoundRequestBuilder requestBuilder = httpClient.prepareGet(urlString).addHeader("Accept", TENT_MIME_TYPE);
       if (isAuthorized()) {
         requestBuilder.addHeader("Authorization", REQUEST_SIGNER.generateAuthorizationHeader("GET", url, accessToken));
       }
-      
+
       return requestBuilder.execute(new AsyncCompletionHandler<Post>() {
         @Override
         public Post onCompleted(Response response) throws Exception {
@@ -302,7 +303,7 @@ public class HttpTentDataSource implements TentDataSource {
               String responseBody = response.getResponseBody(UTF_8);
               LOGGER.debug(response.getStatusCode() + " " + response.getStatusText());
               LOGGER.debug(responseBody);
-              
+
               return GSON.fromJson(responseBody, Post.class);
             }
           });
@@ -310,7 +311,7 @@ public class HttpTentDataSource implements TentDataSource {
       throw Throwables.propagate(e);
     }
   }
-  
+
   @Override
   public Future<Post> put(Post post) {
     String urlString = getServer() + "/posts/" + post.getId();
@@ -324,8 +325,8 @@ public class HttpTentDataSource implements TentDataSource {
           public Post onCompleted(Response response) throws Exception {
             String responseBody = response.getResponseBody();
             LOGGER.debug(responseBody);
-            
-            
+
+
             return GSON.fromJson(responseBody, Post.class);
           }
         });
@@ -333,7 +334,7 @@ public class HttpTentDataSource implements TentDataSource {
       throw Throwables.propagate(Throwables.getRootCause(e));
     }
   }
-  
+
   /* (non-Javadoc)
    * @see com.moandjiezana.tent.client.TentDataSource#deletePost(java.lang.String)
    */
@@ -370,8 +371,30 @@ public class HttpTentDataSource implements TentDataSource {
               LOGGER.debug(responseBody);
               RegistrationResponse registrationResponse = GSON.fromJson(responseBody, RegistrationResponse.class);
               setRegistrationResponse(registrationResponse);
-              
+
               return registrationResponse;
+            }
+          });
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  @Override
+  public Future<App> getApp() {
+    String urlString = getServer() + "/apps/" + registrationResponse.getId();
+    try {
+      return httpClient.prepareGet(urlString)
+          .addHeader("Accept", TENT_MIME_TYPE)
+           .addHeader("Authorization", REQUEST_SIGNER.generateAuthorizationHeader("GET", new URL(urlString), registrationResponse))
+           .execute(new AsyncCompletionHandler<App>() {
+            @Override
+            public App onCompleted(Response response) throws Exception {
+              if (response.getStatusCode() != 200) {
+                LOGGER.debug(response.getResponseBody());
+                return null;
+              }
+              return GSON.fromJson(response.getResponseBody(), App.class);
             }
           });
     } catch (Exception e) {
@@ -391,7 +414,7 @@ public class HttpTentDataSource implements TentDataSource {
         .addQueryParameter("tent_post_types", authorizationRequest.getTentPostTypes())
         .addQueryParameter("tent_notification_url", authorizationRequest.getTentNotificationUrl()).build().getUrl();
   }
-  
+
   /* (non-Javadoc)
    * @see com.moandjiezana.tent.client.TentDataSource#getAccessToken(java.lang.String)
    */
@@ -399,11 +422,11 @@ public class HttpTentDataSource implements TentDataSource {
   public Future<AccessToken> getAccessToken(String code) {
     String uri = "/apps/" + registrationResponse.getId() + "/authorizations";
     String urlString = getServer() + uri;
-    
+
     HashMap<String, String> body = new HashMap<String, String>();
     body.put("code", code);
     body.put("token_type", "mac");
-    
+
     try {
       URL url = new URL(urlString);
       AccessToken tempToken = new AccessToken();
@@ -421,13 +444,13 @@ public class HttpTentDataSource implements TentDataSource {
           @Override
           public AccessToken onCompleted(Response response) throws Exception {
             String responseBody = response.getResponseBody(UTF_8);
-            
+
             LOGGER.debug("TentClientAsync.getAccessToken()");
             LOGGER.debug(Integer.toString(response.getStatusCode()));
             LOGGER.debug(responseBody);
-            
+
             accessToken = GSON.fromJson(responseBody, AccessToken.class);
-            
+
             return accessToken;
           }
         });
@@ -435,7 +458,7 @@ public class HttpTentDataSource implements TentDataSource {
       throw Throwables.propagate(e);
     }
   }
-  
+
   /* (non-Javadoc)
    * @see com.moandjiezana.tent.client.TentDataSource#setAccessToken(com.moandjiezana.tent.oauth.AccessToken)
    */
@@ -484,7 +507,7 @@ public class HttpTentDataSource implements TentDataSource {
       }
     }
   }
-  
+
   private String makeAbsoluteUrl(String url) {
     if (url.startsWith("http://") || url.startsWith("https://")) {
       return url;
