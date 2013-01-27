@@ -1,6 +1,5 @@
 package com.moandjiezana.tent.client;
 
-import com.google.common.base.Charsets;
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -51,7 +50,7 @@ import org.slf4j.LoggerFactory;
  */
 public class HttpTentDataSource implements TentDataSource {
 
-  private static final String UTF_8 = Charsets.UTF_8.toString();
+  private static final String UTF_8 = "UTF-8";
   private static final RequestSigner REQUEST_SIGNER = new RequestSigner();
   private static final String TENT_REL_PROFILE = "https://tent.io/rels/profile";
   private static final Logger LOGGER = LoggerFactory.getLogger(HttpTentDataSource.class);
