@@ -57,6 +57,8 @@
         <configuration>
           <description>${project.version} release of ${project.name}</description>
           <override>true</override>
+          <repositoryOwner>mwanji</repositoryOwner>
+          <repositoryName>tent-client-java</repositoryName>
         </configuration>
       </plugin>
 		</plugins>
