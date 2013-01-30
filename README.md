@@ -17,3 +17,13 @@ Add the following repository to your POM's `<repositories>` tag:
 </repository>
 ````
 
+Add the following dependency to the `<dependencies>` tag:
+
+````xml
+<dependency>
+  <groupId>com.moandjiezana.tent</groupId>
+  <artifactId>tent-client</artifactId>
+  <version>1.0.0-SNAPSHOT</version>
+</dependency>
+````
+
